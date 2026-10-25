@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "db:migrate": "knex migrate:latest",
+    "db:rollback": "knex migrate:rollback",
+    "db:status": "knex migrate:status",
+    "db:make": "knex migrate:make"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +20,8 @@
     "dotenv": "^18.0.9",
     "express": "^5.3.0",
     "helmet": "^8.3.0",
+    "knex": "^3.3.0",
+    "pg": "^8.23.1",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
     "zod": "^4.6.7"

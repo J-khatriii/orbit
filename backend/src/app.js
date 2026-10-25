@@ -1,19 +1,26 @@
 import express from "express";
 import cors from "cors";
-import healthRoutes from "./routes/health.routes.js";
-import errorMiddleware from "./middleware/error.middleware.js";
+import helmet from "helmet";
+import routes from "./routes/index.js";
+import { requestLogger } from "./middleware/requestLogger.js";
+import { notFound } from "./middleware/notFound.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-app.use(cors());
+app.disable("x-powered-by");
+app.use(requestLogger);
+app.use(helmet());
 app.use(express.json());
+app.use(cors());
+
+app.use(routes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.get("/", (req, res) => {
-    res.json({ message: "Orbit API is running" });
+  res.json({ message: "Orbit API is running" });
 });
-
-app.use("/api", healthRoutes);
-
-app.use(errorMiddleware);
 
 export default app;

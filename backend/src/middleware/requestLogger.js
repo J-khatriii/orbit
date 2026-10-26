@@ -15,7 +15,8 @@ export const requestLogger = pinoHttp({
     return "info";
   },
   autoLogging: {
-    ignore: (req) =>
-      req.url.startsWith("/health") || req.url.startsWith("/api/v1/health"),
+    ignore: (req) => {
+      return req.url.startsWith("/health") || req.url.startsWith("/api/v1/health");
+    },
   },
 });

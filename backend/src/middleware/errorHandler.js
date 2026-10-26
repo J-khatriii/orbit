@@ -1,8 +1,8 @@
 import { AppError } from "../utils/AppError.js";
 
-export function errorHandler(err, req, res, _next) {
+export const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {
-    return _next(err);
+    return next(err);
   }
 
   let statusCode = 500;
@@ -32,4 +32,4 @@ export function errorHandler(err, req, res, _next) {
   res.status(statusCode).json({
     error: { code, message, ...(details && { details }) },
   });
-}
+};

@@ -1,20 +1,18 @@
 import app from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
-import { db } from './db/knex.js';
+import { db } from "./db/knex.js";
 
 try {
-  await db.raw('select 1');
-  logger.info('Database connected');
+  await db.raw("select 1");
+  logger.info("Database connected");
 } catch (err) {
-  logger.fatal({ err }, 'Database connection failed');
+  logger.fatal({ err }, "Database connection failed");
   process.exit(1);
 }
 
 const server = app.listen(env.PORT, () => {
-  logger.info(
-    `Orbit server listening on http://localhost:${env.PORT} (${env.NODE_ENV})`,
-  );
+  logger.info(`Orbit server listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
 });
 
 const shutdown = (signal) => {
@@ -23,8 +21,14 @@ const shutdown = (signal) => {
     await db.destroy();
     process.exit(0);
   });
-  setTimeout(() => process.exit(1), 10000).unref();
-}
+  setTimeout(() => {
+    return process.exit(1);
+  }, 10000).unref();
+};
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => {
+  return shutdown("SIGTERM");
+});
+process.on("SIGINT", () => {
+  return shutdown("SIGINT");
+});

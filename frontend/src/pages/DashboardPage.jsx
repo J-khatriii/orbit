@@ -21,7 +21,7 @@ const StatusRow = ({ label, query }) => {
       </span>
     </li>
   );
-}
+};
 
 const DashboardPage = () => {
   const server = useServerHealth();
@@ -43,6 +43,6 @@ const DashboardPage = () => {
       </section>
     </div>
   );
-}
+};
 
 export default DashboardPage;

@@ -35,4 +35,4 @@ export const api = async (path, { method = "GET", body, signal } = {}) => {
   }
 
   return data;
-}
+};

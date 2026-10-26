@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import AppLayout from "../components/layout/AppLayout.jsx";
-import DashboardPage from "../pages/DashBoardPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
+import DashboardPage from "../pages/DashboardPage.jsx";
 
 export const router = createBrowserRouter([
   {

@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - run: npm ci
+      - run: npm run build
+
+  backend:
+    name: Backend and database
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: orbit
+          POSTGRES_PASSWORD: orbit_ci_password
+          POSTGRES_DB: orbit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U orbit -d orbit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      LOG_LEVEL: warn
+      DATABASE_URL: postgresql://orbit:orbit_ci_password@localhost:5432/orbit
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - run: npm ci
+
+      - name: Run migrations
+        run: npm run db:migrate
+
+      - name: Check that rollback works and migrations re-apply
+        run: |
+          npm run db:rollback
+          npm run db:migrate
+
+      - name: Boot server and check health
+        run: |
+          npm start &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:4000/api/v1/health/db; then
+              kill $SERVER_PID
+              exit 0
+            fi
+            sleep 1
+          done
+          kill $SERVER_PID
+          exit 1

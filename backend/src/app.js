@@ -5,6 +5,7 @@ import routes from "./routes/index.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.disable("x-powered-by");
 app.use(requestLogger);
 app.use(helmet());
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors());
 
 // Register API routes

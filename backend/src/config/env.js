@@ -6,6 +6,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "must start with postgresql://"),
+  SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 const parsed = schema.safeParse(process.env);

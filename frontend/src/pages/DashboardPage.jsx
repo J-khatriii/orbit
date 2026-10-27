@@ -1,4 +1,5 @@
 import { useDatabaseHealth, useServerHealth } from "../features/health/useHealth.js";
+import { Card } from "../components/ui/index.js";
 
 const StatusRow = ({ label, query }) => {
   let text = "Checking...";
@@ -34,13 +35,12 @@ const DashboardPage = () => {
         Your business at a glance. The real widgets arrive in Phase 8.
       </p>
 
-      <section className="mt-6 max-w-md rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-sm font-semibold text-slate-700">System status</h2>
-        <ul className="mt-3 space-y-2">
+      <Card title="System status" className="mt-6 max-w-md">
+        <ul className="space-y-2">
           <StatusRow label="API server" query={server} />
           <StatusRow label="Database" query={database} />
         </ul>
-      </section>
+      </Card>
     </div>
   );
 };

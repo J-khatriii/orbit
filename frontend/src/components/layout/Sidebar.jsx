@@ -13,7 +13,7 @@ const NAV = [
 const Sidebar = () => {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
-      <div className="flex h-14 items-center px-5 text-lg font-bold text-indigo-600">Orbit</div>
+      <div className="flex h-14 items-center px-5 text-lg font-bold text-brand-600">Orbit</div>
       <nav className="flex flex-col gap-1 px-3 py-2">
         {NAV.map((item) => {
           return item.to ? (
@@ -23,7 +23,7 @@ const Sidebar = () => {
               end
               className={({ isActive }) => {
                 return `rounded-lg px-3 py-2 text-sm font-medium ${
-                  isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100"
+                  isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100"
                 }`;
               }}
             >

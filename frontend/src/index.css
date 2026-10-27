@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+@theme {
+  /* Fonts */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+
+  /* Surfaces and lines (warm neutrals) */
+  --color-canvas: #f4f3ee;
+  --color-surface: #fcfbf8;
+  --color-sunken: #eeece4;
+  --color-line: #e3e0d6;
+
+  /* Text */
+  --color-ink: #1c1b18;
+  --color-ink-soft: #55534c;
+  --color-ink-muted: #85837a;
+
+  /* Brand blue */
+  --color-brand-50: #eff2fe;
+  --color-brand-100: #e1e7fc;
+  --color-brand-200: #c6d1f9;
+  --color-brand-300: #9fb2f4;
+  --color-brand-400: #6f89ec;
+  --color-brand-500: #4264e0;
+  --color-brand-600: #2b4bd3;
+  --color-brand-700: #2339ad;
+  --color-brand-800: #1f3088;
+  --color-brand-900: #1d2c6b;
+
+  /* Sage green: success, on track, paid */
+  --color-sage-50: #f1f4ea;
+  --color-sage-100: #e4e9d7;
+  --color-sage-200: #cdd6b6;
+  --color-sage-500: #7a8c5e;
+  --color-sage-600: #5f7147;
+  --color-sage-700: #4a5a37;
+
+  /* Clay: overdue, warnings, destructive */
+  --color-clay-50: #fdf1ed;
+  --color-clay-100: #fae0d8;
+  --color-clay-500: #dd6a4d;
+  --color-clay-600: #c8482b;
+  --color-clay-700: #a63a22;
+
+  /* Shape and depth */
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(28 27 24 / 0.04), 0 1px 1px rgb(28 27 24 / 0.02);
+  --shadow-pop: 0 12px 32px -8px rgb(28 27 24 / 0.18), 0 2px 6px rgb(28 27 24 / 0.06);
+}
+
+@layer base {
+  html {
+    @apply bg-canvas;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+  }
+
+  ::selection {
+    background: var(--color-brand-100);
+  }
+}

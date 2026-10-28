@@ -8,9 +8,9 @@ import { generateUniqueSlug } from "./workspace.service.js";
 import { createSession } from "./session.service.js";
 import { toUser, toWorkspace } from "./serializers.js";
 
-export const signup = async ({ name, email, password, workspaceName }) => {
+export const signup = async ({ name, email, password, workspaceName }, meta) => {
   // Hash before opening the transaction: it is slow on purpose, and we want the
-  // transaction to stay short.
+  // transaction to stay short
   const passwordHash = await hashPassword(password);
 
   try {
@@ -27,15 +27,17 @@ export const signup = async ({ name, email, password, workspaceName }) => {
         userId: user.id,
         role: "owner",
       });
+      const session = await createSession(trx, user.id, meta);
 
       return {
         user: toUser(user),
-        workspace: toWorkspace(workspace, membership.role),
+        workspaces: [toWorkspace(workspace, membership.role)],
+        session,
       };
     });
   } catch (err) {
     // 23505 = Postgres unique_violation. Knex names these constraints
-    // "<table>_<column>_unique", so we match on the column name.
+    // "<table>_<column>_unique", so we match on the column name
     if (err.code === "23505" && err.constraint?.includes("email")) {
       throw new AppError(409, "EMAIL_TAKEN", "An account with this email already exists");
     }

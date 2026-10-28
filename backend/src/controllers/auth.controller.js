@@ -48,3 +48,17 @@ export const resendVerification = async (req, res) => {
 
   res.status(204).end();
 };
+
+export const forgotPassword = async (req, res) => {
+  await authService.requestPasswordReset(req.validated.body);
+
+  res
+    .status(202)
+    .json({ message: "If an account exists for that email, a reset link is on its way." });
+};
+
+export const resetPassword = async (req, res) => {
+  await authService.resetPassword(req.validated.body);
+
+  res.status(204).end();
+};

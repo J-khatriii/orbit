@@ -27,3 +27,11 @@ export const markEmailVerified = async (executor, id) => {
     .whereNull("email_verified_at")
     .update({ email_verified_at: executor.raw("now()") });
 };
+
+export const findByEmail = async (executor, email) => {
+  return executor("users").where({ email }).first(USER_COLUMNS);
+};
+
+export const updatePassword = async (executor, id, passwordHash) => {
+  await executor("users").where({ id }).update({ password_hash: passwordHash });
+};

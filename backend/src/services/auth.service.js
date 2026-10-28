@@ -1,6 +1,6 @@
 import { env } from "../config/env.js";
 import { db } from "../db/knex.js";
-import { verifyEmailEmail } from "../emails/templates.js";
+import { resetPasswordEmail, verifyEmailEmail } from "../emails/templates.js";
 import { logger } from "../lib/logger.js";
 import { sendEmail } from "../lib/mailer.js";
 import { hashPassword, verifyAgainstDummy, verifyPassword } from "../lib/password.js";
@@ -9,7 +9,7 @@ import * as usersRepository from "../repositories/users.repository.js";
 import * as workspacesRepository from "../repositories/workspaces.repository.js";
 import * as membershipsRepository from "../repositories/memberships.repository.js";
 import { generateUniqueSlug } from "./workspace.service.js";
-import { createSession } from "./session.service.js";
+import { createSession, destroyAllSessionsForUser } from "./session.service.js";
 import { consumeToken, issueToken, TOKEN_TYPES } from "./token.service.js";
 import { toUser, toWorkspace } from "./serializers.js";
 
@@ -119,4 +119,43 @@ export const resendVerification = async (userRow) => {
     throw new AppError(409, "ALREADY_VERIFIED", "Your email is already confirmed");
   }
   await sendVerificationEmail(userRow);
+};
+
+const sendPasswordResetEmail = async (user) => {
+  const token = await issueToken(db, user.id, TOKEN_TYPES.PASSWORD_RESET);
+  const url = `${env.APP_URL}/reset-password?token=${token}`;
+
+  await sendEmail({ to: user.email, ...resetPasswordEmail({ name: user.name, url }) });
+};
+
+export const requestPasswordReset = async ({ email }) => {
+  const user = await usersRepository.findByEmail(db, email);
+
+  if (!user) {
+    return;
+  }
+
+  // Deliberately not awaited. If we waited, an existing account would take longer to
+  // answer than an unknown one, and the response time would reveal which emails exist
+  sendPasswordResetEmail(user).catch((err) => {
+    logger.error({ err }, "could not send password reset email");
+  });
+};
+
+export const resetPassword = async ({ token, password }) => {
+  await db.transaction(async (trx) => {
+    const userId = await consumeToken(trx, TOKEN_TYPES.PASSWORD_RESET, token);
+
+    if (!userId) {
+      throw new AppError(400, "INVALID_TOKEN", "This link is invalid or has expired");
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    await usersRepository.updatePassword(trx, userId, passwordHash);
+    // They just proved they own this inbox, so the email counts as verified
+    await usersRepository.markEmailVerified(trx, userId);
+    // Anyone who had the old password (or a stolen session) is signed out everywhere
+    await destroyAllSessionsForUser(trx, userId);
+  });
 };

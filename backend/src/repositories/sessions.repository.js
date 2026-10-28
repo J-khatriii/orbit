@@ -32,3 +32,7 @@ export const findActiveWithUser = async (executor, tokenHash) => {
 export const deleteByTokenHash = async (executor, tokenHash) => {
   await executor("sessions").where({ token_hash: tokenHash }).del();
 };
+
+export const deleteAllForUser = async (executor, userId) => {
+  await executor("sessions").where({ user_id: userId }).del();
+};

@@ -33,3 +33,7 @@ export const findSession = async (token) => {
 export const destroySession = async (token) => {
   await sessionsRepository.deleteByTokenHash(db, hashToken(token));
 };
+
+export const destroyAllSessionsForUser = async (executor, userId) => {
+  await sessionsRepository.deleteAllForUser(executor, userId);
+};

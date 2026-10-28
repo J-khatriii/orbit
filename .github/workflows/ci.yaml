@@ -82,6 +82,11 @@ jobs:
           npm run db:rollback
           npm run db:migrate
 
+      - name: Run tests
+        env:
+          TEST_DATABASE_URL: postgresql://orbit:orbit_ci_password@localhost:5432/orbit_test
+        run: npm test
+
       - name: Boot server and check health
         run: |
           npm start &

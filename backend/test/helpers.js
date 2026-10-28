@@ -1,5 +1,6 @@
 import request from "supertest";
 import app from "../src/app.js";
+import { db } from "../src/db/knex.js";
 import { sendEmail } from "../src/lib/mailer.js";
 
 export const PASSWORD = "correct-horse-battery";
@@ -42,4 +43,31 @@ export const tokenFromEmail = (subjectPart) => {
   });
 
   return match?.text.match(/token=([\w-]+)/)?.[1];
+};
+
+// A new user who owns a brand new workspace.
+export const createWorkspace = async (workspaceName = "Acme Studio") => {
+  const owner = await signupAs({ workspaceName });
+
+  return { owner, workspaceId: owner.res.body.workspaces[0].id };
+};
+
+// Puts an existing user into a workspace with a role. Invites don't exist yet (Step 2.6),
+// so tests write the membership straight into the database.
+export const grantRole = async (workspaceId, userId, role, status = "active") => {
+  await db("memberships").insert({
+    workspace_id: workspaceId,
+    user_id: userId,
+    role,
+    status,
+  });
+};
+
+// A new signed-in user who is also a member of the given workspace.
+export const addMemberTo = async (workspaceId, role, status = "active") => {
+  const member = await signupAs();
+
+  await grantRole(workspaceId, member.res.body.user.id, role, status);
+
+  return member;
 };

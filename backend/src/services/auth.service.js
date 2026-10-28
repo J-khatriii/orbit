@@ -1,4 +1,8 @@
+import { env } from "../config/env.js";
 import { db } from "../db/knex.js";
+import { verifyEmailEmail } from "../emails/templates.js";
+import { logger } from "../lib/logger.js";
+import { sendEmail } from "../lib/mailer.js";
 import { hashPassword, verifyAgainstDummy, verifyPassword } from "../lib/password.js";
 import { AppError } from "../utils/AppError.js";
 import * as usersRepository from "../repositories/users.repository.js";
@@ -6,15 +10,25 @@ import * as workspacesRepository from "../repositories/workspaces.repository.js"
 import * as membershipsRepository from "../repositories/memberships.repository.js";
 import { generateUniqueSlug } from "./workspace.service.js";
 import { createSession } from "./session.service.js";
+import { consumeToken, issueToken, TOKEN_TYPES } from "./token.service.js";
 import { toUser, toWorkspace } from "./serializers.js";
+
+// `user` only needs id, email and name, so it works for both a signup result and a session row
+const sendVerificationEmail = async (user) => {
+  const token = await issueToken(db, user.id, TOKEN_TYPES.EMAIL_VERIFICATION);
+  const url = `${env.APP_URL}/verify-email?token=${token}`;
+
+  await sendEmail({ to: user.email, ...verifyEmailEmail({ name: user.name, url }) });
+};
 
 export const signup = async ({ name, email, password, workspaceName }, meta) => {
   // Hash before opening the transaction: it is slow on purpose, and we want the
   // transaction to stay short
   const passwordHash = await hashPassword(password);
+  let result;
 
   try {
-    return await db.transaction(async (trx) => {
+    result = await db.transaction(async (trx) => {
       const user = await usersRepository.create(trx, { email, name, passwordHash });
       const slug = await generateUniqueSlug(trx, workspaceName);
       const workspace = await workspacesRepository.create(trx, {
@@ -46,9 +60,18 @@ export const signup = async ({ name, email, password, workspaceName }, meta) => 
     }
     throw err;
   }
+
+  // The account exists now. A broken mail server must not undo it: the user can resend later
+  try {
+    await sendVerificationEmail(result.user);
+  } catch (err) {
+    logger.error({ err }, "could not send verification email after signup");
+  }
+
+  return result;
 };
 
-// The user plus every workspace they belong to. Used by login and GET /me.
+// The user plus every workspace they belong to. Used by login and GET /me
 export const getAccount = async (userRow) => {
   const rows = await workspacesRepository.listForUser(db, userRow.id);
 
@@ -78,4 +101,22 @@ export const login = async ({ email, password }, meta) => {
   const account = await getAccount(user);
 
   return { ...account, session };
+};
+
+export const verifyEmail = async (token) => {
+  await db.transaction(async (trx) => {
+    const userId = await consumeToken(trx, TOKEN_TYPES.EMAIL_VERIFICATION, token);
+
+    if (!userId) {
+      throw new AppError(400, "INVALID_TOKEN", "This link is invalid or has expired");
+    }
+    await usersRepository.markEmailVerified(trx, userId);
+  });
+};
+
+export const resendVerification = async (userRow) => {
+  if (userRow.email_verified_at) {
+    throw new AppError(409, "ALREADY_VERIFIED", "Your email is already confirmed");
+  }
+  await sendVerificationEmail(userRow);
 };

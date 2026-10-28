@@ -20,6 +20,7 @@ export const login = async (req, res) => {
   res.json(account);
 };
 
+// Safe to call when already signed out: it just clears whatever is there
 export const logout = async (req, res) => {
   const token = req.cookies?.[SESSION_COOKIE_NAME];
 
@@ -34,4 +35,16 @@ export const me = async (req, res) => {
   const account = await authService.getAccount(req.user);
 
   res.json(account);
+};
+
+export const verifyEmail = async (req, res) => {
+  await authService.verifyEmail(req.validated.body.token);
+
+  res.json({ emailVerified: true });
+};
+
+export const resendVerification = async (req, res) => {
+  await authService.resendVerification(req.user);
+
+  res.status(204).end();
 };

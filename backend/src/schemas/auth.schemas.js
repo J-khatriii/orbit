@@ -21,3 +21,7 @@ export const loginSchema = z.object({
     .pipe(z.string().max(254)),
   password: z.string().min(1, "Enter your password").max(128),
 });
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(20, "This link is not valid").max(200, "This link is not valid"),
+});

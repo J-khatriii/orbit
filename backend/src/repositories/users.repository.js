@@ -20,3 +20,10 @@ export const touchLastLogin = async (executor, id) => {
     .where({ id })
     .update({ last_login_at: executor.raw("now()") });
 };
+
+export const markEmailVerified = async (executor, id) => {
+  await executor("users")
+    .where({ id })
+    .whereNull("email_verified_at")
+    .update({ email_verified_at: executor.raw("now()") });
+};

@@ -23,3 +23,15 @@ export const toWorkspace = (row, role) => {
     role,
   };
 };
+
+export const toMember = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+    avatarUrl: row.avatar_url,
+    role: row.role,
+    status: row.status,
+    joinedAt: row.joined_at,
+  };
+};

@@ -7,3 +7,19 @@ export const create = async (executor, { workspaceId, userId, role }) => {
 
   return membership;
 };
+
+export const listForWorkspace = async (executor, workspaceId) => {
+  return executor("memberships")
+    .join("users", "users.id", "memberships.user_id")
+    .where("memberships.workspace_id", workspaceId)
+    .orderBy("memberships.created_at", "asc")
+    .select(
+      "users.id as user_id",
+      "users.name",
+      "users.email",
+      "users.avatar_url",
+      "memberships.role",
+      "memberships.status",
+      "memberships.created_at as joined_at",
+    );
+};

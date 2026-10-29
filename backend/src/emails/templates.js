@@ -56,3 +56,23 @@ export const resetPasswordEmail = ({ name, url }) => {
     }),
   };
 };
+
+const ROLE_LABELS = {
+  admin: "an admin",
+  member: "a team member",
+  client: "a client",
+};
+
+export const invitationEmail = ({ inviterName, workspaceName, role, url }) => {
+  return {
+    subject: `${inviterName} invited you to ${workspaceName} on Orbit`,
+    ...layout({
+      heading: `Join ${workspaceName}`,
+      intro: `${inviterName} invited you to join ${workspaceName} on Orbit as ${ROLE_LABELS[role]}.`,
+      buttonLabel: "Accept invitation",
+      url,
+      outro:
+        "This invitation works for 7 days. If you weren't expecting it, you can ignore this email.",
+    }),
+  };
+};

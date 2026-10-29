@@ -23,3 +23,13 @@ export const listForWorkspace = async (executor, workspaceId) => {
       "memberships.created_at as joined_at",
     );
 };
+
+// Is there already a member (of any status) with this email?
+export const existsForEmail = async (executor, { workspaceId, email }) => {
+  const row = await executor("memberships")
+    .join("users", "users.id", "memberships.user_id")
+    .where({ "memberships.workspace_id": workspaceId, "users.email": email })
+    .first("memberships.id");
+
+  return Boolean(row);
+};

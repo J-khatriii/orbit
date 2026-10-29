@@ -35,3 +35,14 @@ export const toMember = (row) => {
     joinedAt: row.joined_at,
   };
 };
+
+export const toInvitation = (row) => {
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    invitedByName: row.invited_by_name ?? null,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+  };
+};

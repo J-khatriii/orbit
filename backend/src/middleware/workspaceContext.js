@@ -1,8 +1,7 @@
 import { db } from "../db/knex.js";
 import * as workspacesRepository from "../repositories/workspaces.repository.js";
 import { AppError } from "../utils/AppError.js";
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isUuid } from "../utils/isUuid.js";
 
 const workspaceNotFound = () => {
   return new AppError(404, "WORKSPACE_NOT_FOUND", "Workspace not found");
@@ -11,7 +10,7 @@ const workspaceNotFound = () => {
 export const workspaceContext = async (req, res, next) => {
   const { workspaceId } = req.params;
 
-  if (!UUID_PATTERN.test(workspaceId)) {
+  if (!isUuid(workspaceId)) {
     throw workspaceNotFound();
   }
 

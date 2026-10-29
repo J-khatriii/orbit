@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const emailRule = z
+export const emailRule = z
   .string()
   .trim()
   .toLowerCase()

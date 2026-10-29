@@ -35,3 +35,7 @@ export const findByEmail = async (executor, email) => {
 export const updatePassword = async (executor, id, passwordHash) => {
   await executor("users").where({ id }).update({ password_hash: passwordHash });
 };
+
+export const findById = async (executor, id) => {
+  return executor("users").where({ id }).first(USER_COLUMNS);
+};

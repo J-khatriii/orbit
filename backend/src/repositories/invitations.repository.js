@@ -66,3 +66,37 @@ export const revoke = async (executor, { workspaceId, id }) => {
 
   return row;
 };
+
+// Read-only lookup for the preview page. Returns undefined if the token is unknown,
+// used, revoked or expired.
+export const findPendingByTokenHash = async (executor, tokenHash) => {
+  return executor("invitations")
+    .join("workspaces", "workspaces.id", "invitations.workspace_id")
+    .leftJoin("users", "users.id", "invitations.invited_by")
+    .where("invitations.token_hash", tokenHash)
+    .whereNull("invitations.accepted_at")
+    .whereNull("invitations.revoked_at")
+    .andWhere("invitations.expires_at", ">", executor.raw("now()"))
+    .first(
+      "invitations.id",
+      "invitations.email",
+      "invitations.role",
+      "workspaces.name as workspace_name",
+      "users.name as invited_by_name",
+    );
+};
+
+// Marks the invitation accepted and returns it in ONE statement, so two simultaneous
+// requests can't both accept it. If the surrounding transaction later fails, this
+// is rolled back and the invitation stays usable.
+export const consumeByTokenHash = async (executor, tokenHash) => {
+  const [row] = await executor("invitations")
+    .where({ token_hash: tokenHash })
+    .whereNull("accepted_at")
+    .whereNull("revoked_at")
+    .andWhere("expires_at", ">", executor.raw("now()"))
+    .update({ accepted_at: executor.raw("now()") })
+    .returning(["id", "workspace_id", "email", "role"]);
+
+  return row;
+};

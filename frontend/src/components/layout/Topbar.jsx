@@ -2,10 +2,13 @@ import { useMatches } from "react-router";
 import { Bell, Search } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import OrbitLogo from "./OrbitLogo.jsx";
+import { useAuth } from "../../features/auth/authContext.js";
 
 const Topbar = () => {
   const matches = useMatches();
   const toast = useToast();
+  const { activeWorkspace } = useAuth();
+
   const title = matches.findLast((match) => {
     match.handle?.title;
   })?.handle.title;
@@ -15,7 +18,7 @@ const Topbar = () => {
       <div className="flex items-center gap-4">
         <OrbitLogo className="md:hidden" />
         <nav aria-label="Breadcrumb" className="hidden items-center gap-2 text-sm md:flex">
-          <span className="text-ink-muted">Workspace</span>
+          <span className="text-ink-muted">{activeWorkspace?.name ?? "Workspace"}</span>
           {title && (
             <>
               <span className="text-ink-muted/60">/</span>

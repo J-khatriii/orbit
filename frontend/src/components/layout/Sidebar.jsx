@@ -1,23 +1,24 @@
 import { NavLink } from "react-router";
 import {
-  ChevronDown,
   ChevronsUpDown,
   CircleCheck,
   CircleHelp,
   Columns3,
   Folder,
   LayoutGrid,
+  LogOut,
   MessagesSquare,
   Receipt,
   Users,
 } from "lucide-react";
 import { Avatar, useToast } from "../ui/index.js";
 import { cn } from "../../lib/cn.js";
+import { useAuth } from "../../features/auth/authContext.js";
+import { ROLE_LABELS } from "../../features/auth/roles.js";
+import { useLogout } from "../../features/auth/useAuthActions.js";
 import OrbitLogo from "./OrbitLogo.jsx";
 
-const WORKSPACE_NAME = "My workspace";
-const USER = { name: "Alex Morgan", role: "Studio workspace" };
-
+// Items without `to` are not built yet. `phase` says when they arrive.
 const NAV = [
   { label: "Overview", to: "/", icon: LayoutGrid },
   { label: "Clients", icon: Users, phase: 3 },
@@ -68,6 +69,19 @@ const NavItem = ({ item }) => {
 
 const Sidebar = () => {
   const toast = useToast();
+  const { user, activeWorkspace } = useAuth();
+  const logout = useLogout();
+
+  const workspaceName = activeWorkspace?.name ?? "No workspace";
+
+  // Signing out empties the cached "who am I", and the route guard then sends us to /login.
+  const handleSignOut = () => {
+    logout.mutate(undefined, {
+      onError: (error) => {
+        toast.show(error.message);
+      },
+    });
+  };
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-sunken/60 px-4 py-6 md:flex">
@@ -76,12 +90,12 @@ const Sidebar = () => {
       <button
         type="button"
         onClick={() => {
-          return toast.show("Switching workspaces arrives in Phase 2");
+          toast.show("Switching workspaces arrives in Step 2.9");
         }}
         className="mt-6 flex items-center gap-3 rounded-control bg-surface px-3 py-2.5 text-left shadow-card ring-1 ring-line transition-colors hover:bg-canvas"
       >
-        <Avatar name={WORKSPACE_NAME} size="sm" tone="ink" square />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">{WORKSPACE_NAME}</span>
+        <Avatar name={workspaceName} size="sm" tone="ink" square />
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">{workspaceName}</span>
         <ChevronsUpDown className="size-4 text-ink-muted" aria-hidden="true" />
       </button>
 
@@ -95,7 +109,7 @@ const Sidebar = () => {
         <button
           type="button"
           onClick={() => {
-            return toast.show("Help and guides arrive in Phase 11");
+            toast.show("Help and guides arrive in Phase 11");
           }}
           className={cn(itemBase, "w-full text-ink-soft hover:bg-sunken hover:text-ink")}
         >
@@ -104,20 +118,33 @@ const Sidebar = () => {
 
         <div className="my-3 border-t border-line" />
 
-        <button
-          type="button"
-          onClick={() => {
-            return toast.show("The account menu arrives in Phase 2");
-          }}
-          className="flex w-full items-center gap-3 rounded-control px-3 py-2 text-left transition-colors hover:bg-sunken"
-        >
-          <Avatar name={USER.name} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">{USER.name}</span>
-            <span className="block truncate text-xs text-ink-muted">{USER.role}</span>
-          </span>
-          <ChevronDown className="size-4 text-ink-muted" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              toast.show("The account menu arrives in Step 2.9");
+            }}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-control px-3 py-2 text-left transition-colors hover:bg-sunken"
+          >
+            <Avatar name={user?.name ?? "?"} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{user?.name}</span>
+              <span className="block truncate text-xs text-ink-muted">
+                {ROLE_LABELS[activeWorkspace?.role] ?? ""}
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label="Sign out"
+            title="Sign out"
+            disabled={logout.isPending}
+            onClick={handleSignOut}
+            className="grid size-9 shrink-0 place-items-center rounded-control text-ink-muted transition-colors hover:bg-sunken hover:text-ink disabled:opacity-50"
+          >
+            <LogOut className="size-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </aside>
   );

@@ -3,20 +3,20 @@ import { api } from "../../lib/api.js";
 
 export const useServerHealth = () => {
   return useQuery({
-    queryKey: ["health"],
+    queryKey: ["health", "server"],
     queryFn: () => {
-      return api("/health");
+      return api.get("/health");
     },
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
   });
 };
 
 export const useDatabaseHealth = () => {
   return useQuery({
-    queryKey: ["health", "db"],
+    queryKey: ["health", "database"],
     queryFn: () => {
-      return api("/health/db");
+      return api.get("/health/db");
     },
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
   });
 };

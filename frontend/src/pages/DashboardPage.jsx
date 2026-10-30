@@ -1,6 +1,7 @@
 import { CircleCheck, Layers, MessageCircle, Plus, Receipt } from "lucide-react";
 import { Badge, Button, Card, PageHeader, StatCard, useToast } from "../components/ui/index.js";
 import { useDatabaseHealth, useServerHealth } from "../features/health/useHealth.js";
+import { useAuth } from "../features/auth/authContext.js";
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -40,12 +41,16 @@ const DashboardPage = () => {
   const database = useDatabaseHealth();
   const toast = useToast();
 
+  const { user } = useAuth();
+  const firstName = user?.name?.split(" ")[0];
+  const hello = firstName ? `${greeting()}, ${firstName}.` : `${greeting()}.`;
+
   return (
     <div className="space-y-10">
       <PageHeader
         eyebrow={today()}
         title="A little space to do great work."
-        subtitle={`${greeting()}. Everything in its orbit.`}
+        subtitle={`${hello} Everything in its orbit.`}
         actions={
           <Button
             icon={Plus}

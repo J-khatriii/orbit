@@ -2,9 +2,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router/dom";
 import { queryClient } from "./app/queryClient.js";
 import { router } from "./app/router.jsx";
-import { ToastProvider } from "./components/ui/Toast.jsx";
+import { ToastProvider } from "./components/ui/index.js";
 
-export default function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
@@ -12,4 +12,6 @@ export default function App() {
       </ToastProvider>
     </QueryClientProvider>
   );
-}
+};
+
+export default App;

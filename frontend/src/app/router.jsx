@@ -7,6 +7,11 @@ import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import AuthPlaceholderPage from "../pages/auth/AuthPlaceholderPage.jsx";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage.jsx";
+import LoginPage from "../pages/auth/LoginPage.jsx";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage.jsx";
+import SignupPage from "../pages/auth/SignupPage.jsx";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -18,48 +23,14 @@ export const router = createBrowserRouter([
         // Signed-in people are sent to the app instead.
         element: <PublicOnly />,
         children: [
-          {
-            path: "login",
-            element: (
-              <AuthPlaceholderPage title="Sign in" description="The sign-in form arrives in 2.8." />
-            ),
-          },
-          {
-            path: "signup",
-            element: (
-              <AuthPlaceholderPage title="Create account" description="Signup arrives in 2.8." />
-            ),
-          },
-          {
-            path: "forgot-password",
-            element: (
-              <AuthPlaceholderPage
-                title="Forgot password"
-                description="The reset request form arrives in 2.8."
-              />
-            ),
-          },
+          { path: "login", element: <LoginPage /> },
+          { path: "signup", element: <SignupPage /> },
+          { path: "forgot-password", element: <ForgotPasswordPage /> },
         ],
       },
       // These work signed in or out, because an email link can be opened either way.
-      {
-        path: "reset-password",
-        element: (
-          <AuthPlaceholderPage
-            title="Choose a new password"
-            description="The reset form arrives in 2.8."
-          />
-        ),
-      },
-      {
-        path: "verify-email",
-        element: (
-          <AuthPlaceholderPage
-            title="Confirm your email"
-            description="The confirmation screen arrives in 2.8."
-          />
-        ),
-      },
+      { path: "reset-password", element: <ResetPasswordPage /> },
+      { path: "verify-email", element: <VerifyEmailPage /> },
       {
         path: "accept-invite",
         element: (

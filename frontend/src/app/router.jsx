@@ -7,6 +7,8 @@ import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import AuthPlaceholderPage from "../pages/auth/AuthPlaceholderPage.jsx";
+import LoginPage from "../pages/auth/LoginPage.jsx";
+import SignupPage from "../pages/auth/SignupPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -18,24 +20,14 @@ export const router = createBrowserRouter([
         // Signed-in people are sent to the app instead.
         element: <PublicOnly />,
         children: [
-          {
-            path: "login",
-            element: (
-              <AuthPlaceholderPage title="Sign in" description="The sign-in form arrives in 2.8." />
-            ),
-          },
-          {
-            path: "signup",
-            element: (
-              <AuthPlaceholderPage title="Create account" description="Signup arrives in 2.8." />
-            ),
-          },
+          { path: "login", element: <LoginPage /> },
+          { path: "signup", element: <SignupPage /> },
           {
             path: "forgot-password",
             element: (
               <AuthPlaceholderPage
                 title="Forgot password"
-                description="The reset request form arrives in 2.8."
+                description="The reset request form arrives in Part B."
               />
             ),
           },
@@ -47,7 +39,7 @@ export const router = createBrowserRouter([
         element: (
           <AuthPlaceholderPage
             title="Choose a new password"
-            description="The reset form arrives in 2.8."
+            description="The reset form arrives in Part B."
           />
         ),
       },
@@ -56,7 +48,7 @@ export const router = createBrowserRouter([
         element: (
           <AuthPlaceholderPage
             title="Confirm your email"
-            description="The confirmation screen arrives in 2.8."
+            description="The confirmation screen arrives in Part B."
           />
         ),
       },

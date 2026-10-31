@@ -7,8 +7,11 @@ import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import AuthPlaceholderPage from "../pages/auth/AuthPlaceholderPage.jsx";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage.jsx";
 import SignupPage from "../pages/auth/SignupPage.jsx";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -22,36 +25,12 @@ export const router = createBrowserRouter([
         children: [
           { path: "login", element: <LoginPage /> },
           { path: "signup", element: <SignupPage /> },
-          {
-            path: "forgot-password",
-            element: (
-              <AuthPlaceholderPage
-                title="Forgot password"
-                description="The reset request form arrives in Part B."
-              />
-            ),
-          },
+          { path: "forgot-password", element: <ForgotPasswordPage /> },
         ],
       },
       // These work signed in or out, because an email link can be opened either way.
-      {
-        path: "reset-password",
-        element: (
-          <AuthPlaceholderPage
-            title="Choose a new password"
-            description="The reset form arrives in Part B."
-          />
-        ),
-      },
-      {
-        path: "verify-email",
-        element: (
-          <AuthPlaceholderPage
-            title="Confirm your email"
-            description="The confirmation screen arrives in Part B."
-          />
-        ),
-      },
+      { path: "reset-password", element: <ResetPasswordPage /> },
+      { path: "verify-email", element: <VerifyEmailPage /> },
       {
         path: "accept-invite",
         element: (

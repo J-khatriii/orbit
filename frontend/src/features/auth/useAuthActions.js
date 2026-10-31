@@ -57,3 +57,40 @@ export const useLogout = () => {
     },
   });
 };
+
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: ({ email }) => {
+      return authApi.forgotPassword(email);
+    },
+  });
+};
+
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.resetPassword,
+    // The server signs this person out everywhere, including this browser.
+    onSuccess: () => {
+      forgetTenantData(queryClient);
+      queryClient.setQueryData(ME_QUERY_KEY, null);
+    },
+  });
+};
+
+export const useVerifyEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.verifyEmail,
+    // If this person is signed in here, refresh "who am I" so the reminder banner goes away.
+    onSuccess: () => {
+      return queryClient.invalidateQueries({ queryKey: ME_QUERY_KEY });
+    },
+  });
+};
+
+export const useResendVerification = () => {
+  return useMutation({ mutationFn: authApi.resendVerification });
+};

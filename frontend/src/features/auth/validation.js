@@ -54,3 +54,14 @@ export const validateSignup = ({ name, workspaceName, email, password }) => {
     password: newPasswordProblem(password),
   });
 };
+
+export const validateForgotPassword = ({ email }) => {
+  return collect({ email: emailProblem(email) });
+};
+
+export const validateResetPassword = ({ password, confirmPassword }) => {
+  return collect({
+    password: newPasswordProblem(password),
+    confirmPassword: confirmPassword === password ? "" : "The passwords don't match",
+  });
+};

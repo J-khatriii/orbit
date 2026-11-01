@@ -1,11 +1,13 @@
 import { createBrowserRouter } from "react-router";
 import PublicOnly from "../components/auth/PublicOnly.jsx";
 import RequireAuth from "../components/auth/RequireAuth.jsx";
+import RequireOnboarded from "../components/auth/RequireOnboarded.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import AuthLayout from "../components/layout/AuthLayout.jsx";
 import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
+import WelcomePage from "../pages/WelcomePage.jsx";
 import AuthPlaceholderPage from "../pages/auth/AuthPlaceholderPage.jsx";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";
@@ -43,24 +45,36 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    // The app itself. Anyone not signed in is sent to /login.
+    // Signed-in only. Anyone not signed in is sent to /login.
     path: "/",
     element: <RequireAuth />,
     children: [
       {
-        element: <AppLayout />,
+        // First-run setup for new workspace owners.
+        path: "welcome",
+        element: <AuthLayout />,
+        children: [{ index: true, element: <WelcomePage /> }],
+      },
+      {
+        // The app itself. Owners of a workspace that isn't set up yet are sent to /welcome.
+        element: <RequireOnboarded />,
         children: [
-          { index: true, element: <DashboardPage />, handle: { title: "Overview" } },
-          ...(import.meta.env.DEV
-            ? [
-                {
-                  path: "design",
-                  element: <DesignSystemPage />,
-                  handle: { title: "Design system" },
-                },
-              ]
-            : []),
-          { path: "*", element: <NotFoundPage />, handle: { title: "Page not found" } },
+          {
+            element: <AppLayout />,
+            children: [
+              { index: true, element: <DashboardPage />, handle: { title: "Overview" } },
+              ...(import.meta.env.DEV
+                ? [
+                    {
+                      path: "design",
+                      element: <DesignSystemPage />,
+                      handle: { title: "Design system" },
+                    },
+                  ]
+                : []),
+              { path: "*", element: <NotFoundPage />, handle: { title: "Page not found" } },
+            ],
+          },
         ],
       },
     ],

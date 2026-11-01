@@ -9,7 +9,7 @@ const schema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
   APP_URL: z.string().pipe(z.url()).default("http://localhost:5173"),
-  SMTP_HOST: z.string().default("localhost"),
+  SMTP_HOST: z.string().default("127.0.0.1"),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),

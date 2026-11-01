@@ -3,6 +3,7 @@ import { fieldErrorsOf } from "../../lib/api.js";
 
 // Holds one form's values and messages, so each screen only describes its fields.
 //   handleChange(name)            -> an onChange handler for that field
+//   setValue(name, value)         -> sets a field without an event (e.g. a colour swatch)
 //   handleSubmit(validate, run)   -> an onSubmit handler
 //     validate(values) returns { field: message }; an empty object means "go ahead"
 //     run(values, { onError }) is usually a mutation's `mutate` function
@@ -12,17 +13,19 @@ export const useAuthForm = (initialValues) => {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
 
+  const setValue = (name, value) => {
+    setValues((current) => {
+      return { ...current, [name]: value };
+    });
+    // Changing a field clears its old message.
+    setErrors((current) => {
+      return { ...current, [name]: undefined };
+    });
+  };
+
   const handleChange = (name) => {
     return (event) => {
-      const { value } = event.target;
-
-      setValues((current) => {
-        return { ...current, [name]: value };
-      });
-
-      setErrors((current) => {
-        return { ...current, [name]: undefined };
-      });
+      setValue(name, event.target.value);
     };
   };
 
@@ -55,5 +58,5 @@ export const useAuthForm = (initialValues) => {
     };
   };
 
-  return { values, errors, formError, handleChange, handleSubmit };
+  return { values, errors, formError, setErrors, setValue, handleChange, handleSubmit };
 };

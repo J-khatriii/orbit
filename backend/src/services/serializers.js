@@ -20,6 +20,7 @@ export const toWorkspace = (row, role) => {
     brandColor: row.brand_color,
     defaultCurrency: row.default_currency,
     timezone: row.timezone,
+    onboarded: Boolean(row.onboarded_at),
     role,
   };
 };

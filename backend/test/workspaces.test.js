@@ -184,3 +184,28 @@ describe("members list", () => {
     expect(JSON.stringify(res.body)).not.toMatch(/password/i);
   });
 });
+
+describe("onboarding flag", () => {
+  it("starts a new workspace as not onboarded, and lets the owner mark it done", async () => {
+    const { owner, workspaceId } = await createWorkspace();
+    const url = `${WORKSPACES}/${workspaceId}`;
+
+    expect(owner.res.body.workspaces[0].onboarded).toBe(false);
+
+    const res = await owner.agent.patch(url).send({ onboarded: true });
+
+    expect(res.status).toBe(200);
+    expect(res.body.workspace.onboarded).toBe(true);
+
+    const me = await owner.agent.get("/api/v1/auth/me");
+
+    expect(me.body.workspaces[0].onboarded).toBe(true);
+  });
+
+  it("never lets onboarding be switched back off", async () => {
+    const { owner, workspaceId } = await createWorkspace();
+    const res = await owner.agent.patch(`${WORKSPACES}/${workspaceId}`).send({ onboarded: false });
+
+    expect(res.status).toBe(400);
+  });
+});

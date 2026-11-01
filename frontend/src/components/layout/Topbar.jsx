@@ -3,6 +3,7 @@ import { Bell, Search } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import OrbitLogo from "./OrbitLogo.jsx";
 import { useAuth } from "../../features/auth/authContext.js";
+import MobileNav from "./MobileNav.jsx";
 
 const Topbar = () => {
   const matches = useMatches();
@@ -16,6 +17,8 @@ const Topbar = () => {
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-canvas/80 px-6 backdrop-blur md:px-10">
       <div className="flex items-center gap-4">
+        <MobileNav />
+
         <OrbitLogo className="md:hidden" />
         <nav aria-label="Breadcrumb" className="hidden items-center gap-2 text-sm md:flex">
           <span className="text-ink-muted">{activeWorkspace?.name ?? "Workspace"}</span>

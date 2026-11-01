@@ -27,6 +27,7 @@ export const updateWorkspaceSchema = z
       .regex(/^[A-Z]{3}$/, "Use a 3-letter currency code like USD")
       .optional(),
     timezone: z.string().trim().refine(isValidTimezone, "Unknown timezone").optional(),
+    onboarded: z.literal(true, { message: "Onboarding can only be marked as done" }).optional(),
   })
   .strict()
   .refine(

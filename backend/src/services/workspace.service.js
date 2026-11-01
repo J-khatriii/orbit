@@ -35,7 +35,12 @@ export const updateWorkspace = async (workspaceId, changes, role) => {
   const columns = {};
 
   for (const [key, value] of Object.entries(changes)) {
-    columns[COLUMN_NAMES[key]] = value;
+    if (key === "onboarded") {
+      // Keep the original time if it was already marked done.
+      columns.onboarded_at = db.raw("COALESCE(onboarded_at, now())");
+    } else {
+      columns[COLUMN_NAMES[key]] = value;
+    }
   }
 
   const row = await workspacesRepository.update(db, workspaceId, columns);

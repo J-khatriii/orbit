@@ -6,6 +6,7 @@ const WORKSPACE_COLUMNS = [
   "brand_color",
   "default_currency",
   "timezone",
+  "onboarded_at",
 ];
 
 const PREFIXED_COLUMNS = WORKSPACE_COLUMNS.map((column) => {

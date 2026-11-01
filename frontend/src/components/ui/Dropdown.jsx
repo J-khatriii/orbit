@@ -40,24 +40,24 @@ const Dropdown = ({
       }
     };
 
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
     document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open]);
 
+  const handleKeyDown = (event) => {
+    if (open && event.key === "Escape") {
+      // Stop here, so a surrounding panel (like the mobile menu) doesn't close as well.
+      event.stopPropagation();
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)} onKeyDown={handleKeyDown}>
       {renderTrigger({ open, toggle, ref: triggerRef })}
       {open && (
         <div

@@ -4,7 +4,7 @@ import { Avatar, Dropdown, DropdownItem } from "../ui/index.js";
 import { useAuth } from "../../features/auth/authContext.js";
 import { ROLE_LABELS } from "../../features/auth/roles.js";
 
-const WorkspaceSwitcher = () => {
+const WorkspaceSwitcher = ({ onSelect }) => {
   const { workspaces, activeWorkspace, setActiveWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const name = activeWorkspace?.name ?? "No workspace";
@@ -45,6 +45,7 @@ const WorkspaceSwitcher = () => {
                     close();
                     // Back to the overview, so you never land on a page from the old workspace.
                     navigate("/");
+                    onSelect?.();
                   }}
                 >
                   <Avatar name={workspace.name} size="sm" tone="ink" square />

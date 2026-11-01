@@ -14,3 +14,4 @@ export { ToastProvider, useToast } from "./Toast.jsx";
 export { default as Select } from "./Select.jsx";
 export { default as Dropdown } from "./Dropdown.jsx";
 export { default as DropdownItem } from "./DropdownItem.jsx";
+export { default as Drawer } from "./Drawer.jsx";

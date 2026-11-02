@@ -1,7 +1,12 @@
 import argon2 from "argon2";
 
+// Real accounts use argon2's strong, deliberately slow defaults. Automated tests create
+// dozens of accounts, so they use cheap settings to stay fast.
+const HASH_OPTIONS =
+  process.env.NODE_ENV === "test" ? { memoryCost: 1024, timeCost: 2, parallelism: 1 } : {};
+
 export const hashPassword = async (password) => {
-  return argon2.hash(password);
+  return argon2.hash(password, HASH_OPTIONS);
 };
 
 export const verifyPassword = async (hash, password) => {

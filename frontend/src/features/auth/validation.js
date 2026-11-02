@@ -65,3 +65,11 @@ export const validateResetPassword = ({ password, confirmPassword }) => {
     confirmPassword: confirmPassword === password ? "" : "The passwords don't match",
   });
 };
+
+export const validateAcceptInvite = ({ name, password, confirmPassword }) => {
+  return collect({
+    name: name.trim() ? "" : "Please enter your name",
+    password: newPasswordProblem(password),
+    confirmPassword: confirmPassword === password ? "" : "The passwords don't match",
+  });
+};

@@ -8,16 +8,19 @@ import {
   MessagesSquare,
   Receipt,
   Users,
+  UsersRound,
 } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import { cn } from "../../lib/cn.js";
 import AccountMenu from "./AccountMenu.jsx";
 import OrbitLogo from "./OrbitLogo.jsx";
 import WorkspaceSwitcher from "./WorkspaceSwitcher.jsx";
+import { useAuth } from "../../features/auth/authContext.js";
 
 // Items without `to` are not built yet. `phase` says when they arrive.
 const NAV = [
   { label: "Overview", to: "/", icon: LayoutGrid },
+  { label: "Team", to: "/team", icon: UsersRound, hideFor: ["client"] },
   { label: "Clients", icon: Users, phase: 3 },
   { label: "Projects", icon: Columns3, phase: 3 },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
@@ -70,6 +73,9 @@ const NavItem = ({ item, onNavigate }) => {
 const SidebarContent = ({ onNavigate }) => {
   const toast = useToast();
 
+  const { activeWorkspace } = useAuth();
+  const role = activeWorkspace?.role;
+
   return (
     <>
       <OrbitLogo className="px-2" />
@@ -77,7 +83,9 @@ const SidebarContent = ({ onNavigate }) => {
       <WorkspaceSwitcher onSelect={onNavigate} />
 
       <nav aria-label="Main" className="mt-6 flex flex-col gap-1">
-        {NAV.map((item) => {
+        {NAV.filter((item) => {
+          return !item.hideFor?.includes(role);
+        }).map((item) => {
           return <NavItem key={item.label} item={item} onNavigate={onNavigate} />;
         })}
       </nav>

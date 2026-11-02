@@ -33,3 +33,23 @@ export const existsForEmail = async (executor, { workspaceId, email }) => {
 
   return Boolean(row);
 };
+
+// One person's membership in one workspace (any status), or undefined.
+export const findForUser = async (executor, { workspaceId, userId }) => {
+  return executor("memberships")
+    .where({ workspace_id: workspaceId, user_id: userId })
+    .first("user_id", "role", "status");
+};
+
+export const setRole = async (executor, { workspaceId, userId, role }) => {
+  const [row] = await executor("memberships")
+    .where({ workspace_id: workspaceId, user_id: userId })
+    .update({ role })
+    .returning(["user_id", "role"]);
+
+  return row;
+};
+
+export const deleteForUser = async (executor, { workspaceId, userId }) => {
+  return executor("memberships").where({ workspace_id: workspaceId, user_id: userId }).del();
+};

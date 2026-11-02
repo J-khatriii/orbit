@@ -1,4 +1,10 @@
 import { Router } from "express";
+import {
+  emailLimiter,
+  loginLimiter,
+  signupLimiter,
+  tokenLimiter,
+} from "../middleware/authRateLimits.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import {
@@ -12,13 +18,24 @@ import * as authController from "../controllers/auth.controller.js";
 
 const router = Router();
 
-router.post("/signup", validate(signupSchema), authController.signup);
-router.post("/login", validate(loginSchema), authController.login);
+// Limiters run first, so a blocked request costs us almost nothing.
+router.post("/signup", signupLimiter, validate(signupSchema), authController.signup);
+router.post("/login", loginLimiter, validate(loginSchema), authController.login);
 router.post("/logout", authController.logout);
 router.get("/me", requireAuth, authController.me);
-router.post("/verify-email", validate(verifyEmailSchema), authController.verifyEmail);
-router.post("/resend-verification", requireAuth, authController.resendVerification);
-router.post("/forgot-password", validate(forgotPasswordSchema), authController.forgotPassword);
-router.post("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
+router.post("/verify-email", tokenLimiter, validate(verifyEmailSchema), authController.verifyEmail);
+router.post("/resend-verification", emailLimiter, requireAuth, authController.resendVerification);
+router.post(
+  "/forgot-password",
+  emailLimiter,
+  validate(forgotPasswordSchema),
+  authController.forgotPassword,
+);
+router.post(
+  "/reset-password",
+  tokenLimiter,
+  validate(resetPasswordSchema),
+  authController.resetPassword,
+);
 
 export default router;

@@ -8,12 +8,12 @@ import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import WelcomePage from "../pages/WelcomePage.jsx";
-import AuthPlaceholderPage from "../pages/auth/AuthPlaceholderPage.jsx";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage.jsx";
 import LoginPage from "../pages/auth/LoginPage.jsx";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage.jsx";
 import SignupPage from "../pages/auth/SignupPage.jsx";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage.jsx";
+import AcceptInvitePage from "../pages/auth/AcceptInvitePage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -33,15 +33,7 @@ export const router = createBrowserRouter([
       // These work signed in or out, because an email link can be opened either way.
       { path: "reset-password", element: <ResetPasswordPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },
-      {
-        path: "accept-invite",
-        element: (
-          <AuthPlaceholderPage
-            title="Join a workspace"
-            description="The invitation screen arrives in 2.10."
-          />
-        ),
-      },
+      { path: "accept-invite", element: <AcceptInvitePage /> },
     ],
   },
   {

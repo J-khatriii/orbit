@@ -14,6 +14,7 @@ import ResetPasswordPage from "../pages/auth/ResetPasswordPage.jsx";
 import SignupPage from "../pages/auth/SignupPage.jsx";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage.jsx";
 import AcceptInvitePage from "../pages/auth/AcceptInvitePage.jsx";
+import TeamPage from "../pages/TeamPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
             element: <AppLayout />,
             children: [
               { index: true, element: <DashboardPage />, handle: { title: "Overview" } },
+              { path: "team", element: <TeamPage />, handle: { title: "Team" } },
               ...(import.meta.env.DEV
                 ? [
                     {

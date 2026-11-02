@@ -13,4 +13,10 @@ export const teamApi = {
   revoke: ({ workspaceId, invitationId }) => {
     return api.delete(`/workspaces/${workspaceId}/invitations/${invitationId}`);
   },
+  changeRole: ({ workspaceId, userId, role }) => {
+    return api.patch(`/workspaces/${workspaceId}/members/${userId}`, { role });
+  },
+  removeMember: ({ workspaceId, userId }) => {
+    return api.delete(`/workspaces/${workspaceId}/members/${userId}`);
+  },
 };

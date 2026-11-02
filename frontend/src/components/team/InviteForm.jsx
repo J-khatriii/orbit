@@ -4,18 +4,13 @@ import { ROLE_LABELS } from "../../features/auth/roles.js";
 import { useAuthForm } from "../../features/auth/useAuthForm.js";
 import { useInviteMember } from "../../features/team/useTeam.js";
 import { validateInvite } from "../../features/team/validation.js";
-
-// Which roles each role may hand out. The server enforces the same rule.
-const INVITABLE = {
-  owner: ["admin", "member", "client"],
-  admin: ["member", "client"],
-};
+import { manageableRoles } from "../../features/team/permissions.js";
 
 const InviteForm = ({ workspaceId, myRole }) => {
   const toast = useToast();
   const invite = useInviteMember();
   const form = useAuthForm({ email: "", role: "member" });
-  const roles = INVITABLE[myRole] ?? [];
+  const roles = manageableRoles(myRole);
 
   const submit = (values, options) => {
     const email = values.email.trim();

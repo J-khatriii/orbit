@@ -58,3 +58,25 @@ export const useRevokeInvitation = () => {
     },
   });
 };
+
+export const useChangeMemberRole = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: teamApi.changeRole,
+    onSuccess: (data, variables) => {
+      return queryClient.invalidateQueries({ queryKey: membersKey(variables.workspaceId) });
+    },
+  });
+};
+
+export const useRemoveMember = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: teamApi.removeMember,
+    onSuccess: (data, variables) => {
+      return queryClient.invalidateQueries({ queryKey: membersKey(variables.workspaceId) });
+    },
+  });
+};

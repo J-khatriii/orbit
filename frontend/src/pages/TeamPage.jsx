@@ -30,10 +30,12 @@ const TeamPage = () => {
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <Card title="Team members">
         <MembersList
+          workspaceId={workspaceId}
+          myRole={role}
+          currentUserId={user.id}
           members={members.data ?? []}
           isPending={members.isPending}
           error={members.error}
-          currentUserId={user.id}
         />
       </Card>
 

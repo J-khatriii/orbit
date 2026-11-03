@@ -64,3 +64,16 @@ export const toClient = (row) => {
     updatedAt: row.updated_at,
   };
 };
+
+export const toActivity = (row) => {
+  return {
+    id: row.id,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    clientId: row.client_id,
+    metadata: row.metadata,
+    createdAt: row.created_at,
+    actor: row.actor_id ? { id: row.actor_id, name: row.actor_name } : null,
+  };
+};

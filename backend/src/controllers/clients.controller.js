@@ -1,4 +1,5 @@
 import * as clientService from "../services/client.service.js";
+import * as activityService from "../services/activity.service.js";
 
 // req.workspace comes from workspaceContext, req.user from requireAuth.
 export const listClients = async (req, res) => {
@@ -57,4 +58,14 @@ export const restoreClient = async (req, res) => {
   });
 
   res.json({ client });
+};
+
+export const listClientActivity = async (req, res) => {
+  const result = await activityService.listClientActivity(
+    req.workspace.id,
+    req.params.clientId,
+    req.validated.query,
+  );
+
+  res.json(result);
 };

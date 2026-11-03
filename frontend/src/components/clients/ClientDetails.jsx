@@ -4,7 +4,7 @@ const Row = ({ label, children }) => {
   return (
     <div className="grid gap-1 py-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
       <dt className="text-sm text-ink-muted">{label}</dt>
-      <dd className="min-w-0 text-sm wrap-break-words whitespace-pre-line text-ink">
+      <dd className="min-w-0 text-sm wrap-break-word whitespace-pre-line text-ink">
         {children || <span className="text-ink-muted">—</span>}
       </dd>
     </div>

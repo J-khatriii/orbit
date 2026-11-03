@@ -10,6 +10,7 @@ import { useAuth } from "../features/auth/authContext.js";
 import { STATUS_LABELS, STATUS_TONES } from "../features/clients/constants.js";
 import { useSetClientArchived } from "../features/clients/useClientMutations.js";
 import { useClient } from "../features/clients/useClients.js";
+import ClientContacts from "../components/clients/ClientContacts.jsx";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -108,7 +109,7 @@ const ClientPage = () => {
         <div className="flex min-w-0 items-center gap-4">
           <Avatar name={client.companyName} size="lg" square />
           <div className="min-w-0">
-            <h1 className="font-display text-3xl break-words text-ink">{client.companyName}</h1>
+            <h1 className="font-display text-3xl wrap-break-word text-ink">{client.companyName}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <Badge tone={STATUS_TONES[client.status]} dot>
                 {STATUS_LABELS[client.status]}
@@ -155,6 +156,11 @@ const ClientPage = () => {
         {tab.id === "overview" ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <div className="space-y-6">
+              <ClientContacts
+                workspaceId={workspaceId}
+                clientId={client.id}
+                clientName={client.companyName}
+              />
               <ClientDetails client={client} defaultCurrency={activeWorkspace?.defaultCurrency} />
             </div>
             <ClientActivity workspaceId={workspaceId} clientId={client.id} />

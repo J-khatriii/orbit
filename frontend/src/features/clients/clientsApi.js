@@ -16,4 +16,15 @@ export const clientsApi = {
   tags: (workspaceId) => {
     return api.get(`/workspaces/${workspaceId}/clients/tags`);
   },
+  create: ({ workspaceId, input }) => {
+    return api.post(`/workspaces/${workspaceId}/clients`, input);
+  },
+  update: ({ workspaceId, clientId, input }) => {
+    return api.patch(`/workspaces/${workspaceId}/clients/${clientId}`, input);
+  },
+  setArchived: ({ workspaceId, clientId, archived }) => {
+    return api.post(
+      `/workspaces/${workspaceId}/clients/${clientId}/${archived ? "archive" : "restore"}`,
+    );
+  },
 };

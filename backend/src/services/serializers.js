@@ -47,3 +47,47 @@ export const toInvitation = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toClient = (row) => {
+  return {
+    id: row.id,
+    companyName: row.company_name,
+    status: row.status,
+    billingEmail: row.billing_email,
+    billingAddress: row.billing_address,
+    taxId: row.tax_id,
+    currency: row.currency,
+    notesInternal: row.notes_internal,
+    tags: row.tags,
+    archivedAt: row.archived_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const toActivity = (row) => {
+  return {
+    id: row.id,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    clientId: row.client_id,
+    metadata: row.metadata,
+    createdAt: row.created_at,
+    actor: row.actor_id ? { id: row.actor_id, name: row.actor_name } : null,
+  };
+};
+
+export const toContact = (row) => {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    jobTitle: row.job_title,
+    isPrimary: row.is_primary,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};

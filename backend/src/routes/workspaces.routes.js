@@ -9,6 +9,9 @@ import * as invitationsController from "../controllers/invitations.controller.js
 import * as workspacesController from "../controllers/workspaces.controller.js";
 import { changeMemberRoleSchema } from "../schemas/members.schemas.js";
 import * as membersController from "../controllers/members.controller.js";
+import clientsRoutes from "./clients.routes.js";
+import { listActivitySchema } from "../schemas/activity.schemas.js";
+import * as activityController from "../controllers/activity.controller.js";
 
 const router = Router();
 
@@ -73,6 +76,22 @@ router.delete(
   workspaceContext,
   requireRole("owner", "admin"),
   membersController.removeMember,
+);
+// The client list is internal: clients (the role) never see it.
+router.use(
+  "/:workspaceId/clients",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  clientsRoutes,
+);
+
+// The workspace-wide history. Internal, like the client list.
+router.get(
+  "/:workspaceId/activity",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  validate(listActivitySchema, "query"),
+  activityController.listWorkspaceActivity,
 );
 
 export default router;

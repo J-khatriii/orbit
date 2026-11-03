@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn.js";
 
+const ALIGN_CLASSES = { left: "left-0 min-w-64", right: "right-0 min-w-48" };
+
 // A button that opens a floating panel.
 //   renderTrigger({ open, toggle, ref })  draws the button. Put `ref` on it.
 //   children                              the panel's content. It can be a function that
@@ -11,6 +13,7 @@ import { cn } from "../../lib/cn.js";
 const Dropdown = ({
   renderTrigger,
   placement = "bottom",
+  align = "left",
   fullWidth = false,
   className,
   children,
@@ -63,7 +66,7 @@ const Dropdown = ({
         <div
           className={cn(
             "absolute z-30 rounded-card bg-surface p-1.5 shadow-pop ring-1 ring-line",
-            fullWidth ? "inset-x-0" : "left-0 min-w-64",
+            fullWidth ? "inset-x-0" : ALIGN_CLASSES[align],
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2",
           )}
         >

@@ -9,6 +9,7 @@ import * as invitationsController from "../controllers/invitations.controller.js
 import * as workspacesController from "../controllers/workspaces.controller.js";
 import { changeMemberRoleSchema } from "../schemas/members.schemas.js";
 import * as membersController from "../controllers/members.controller.js";
+import clientsRoutes from "./clients.routes.js";
 
 const router = Router();
 
@@ -73,6 +74,13 @@ router.delete(
   workspaceContext,
   requireRole("owner", "admin"),
   membersController.removeMember,
+);
+// The client list is internal: clients (the role) never see it.
+router.use(
+  "/:workspaceId/clients",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  clientsRoutes,
 );
 
 export default router;

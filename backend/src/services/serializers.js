@@ -47,3 +47,20 @@ export const toInvitation = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toClient = (row) => {
+  return {
+    id: row.id,
+    companyName: row.company_name,
+    status: row.status,
+    billingEmail: row.billing_email,
+    billingAddress: row.billing_address,
+    taxId: row.tax_id,
+    currency: row.currency,
+    notesInternal: row.notes_internal,
+    tags: row.tags,
+    archivedAt: row.archived_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};

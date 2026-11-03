@@ -31,3 +31,28 @@ export const useClientTags = (workspaceId, enabled = true) => {
     },
   });
 };
+
+export const useClient = (workspaceId, clientId, enabled = true) => {
+  return useQuery({
+    queryKey: [...clientsKey(workspaceId), "detail", clientId],
+    queryFn: () => {
+      return clientsApi.get(workspaceId, clientId);
+    },
+    enabled: Boolean(workspaceId) && enabled,
+    select: (data) => {
+      return data.client;
+    },
+  });
+};
+
+export const useClientActivity = (workspaceId, clientId, pageSize) => {
+  return useQuery({
+    queryKey: [...clientsKey(workspaceId), "activity", clientId, pageSize],
+    queryFn: () => {
+      return clientsApi.activity(workspaceId, clientId, pageSize);
+    },
+    enabled: Boolean(workspaceId),
+    // "Show more" keeps the current lines on screen while the longer list loads.
+    placeholderData: keepPreviousData,
+  });
+};

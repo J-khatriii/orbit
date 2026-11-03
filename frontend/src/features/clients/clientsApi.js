@@ -16,6 +16,12 @@ export const clientsApi = {
   tags: (workspaceId) => {
     return api.get(`/workspaces/${workspaceId}/clients/tags`);
   },
+  get: (workspaceId, clientId) => {
+    return api.get(`/workspaces/${workspaceId}/clients/${clientId}`);
+  },
+  activity: (workspaceId, clientId, pageSize) => {
+    return api.get(`/workspaces/${workspaceId}/clients/${clientId}/activity?pageSize=${pageSize}`);
+  },
   create: ({ workspaceId, input }) => {
     return api.post(`/workspaces/${workspaceId}/clients`, input);
   },

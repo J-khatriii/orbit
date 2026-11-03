@@ -1,6 +1,7 @@
 import { Ellipsis } from "lucide-react";
 import { STATUS_LABELS, STATUS_TONES } from "../../features/clients/constants.js";
 import { Avatar, Badge, Dropdown, DropdownItem } from "../ui/index.js";
+import { Link } from "react-router";
 
 // A phone shows name, status and the menu on one line, then tags and date below.
 // From tablet width up it's five columns.
@@ -72,7 +73,12 @@ const ClientRow = ({ client, canArchive, onEdit, onToggleArchive }) => {
       <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-3">
         <Avatar name={client.companyName} square />
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-ink">{client.companyName}</p>
+          <Link
+            to={`/clients/${client.id}`}
+            className="block truncate text-sm font-medium text-ink hover:underline"
+          >
+            {client.companyName}
+          </Link>
           <p className="truncate text-sm text-ink-soft">
             {client.billingEmail ?? "No billing email"}
           </p>

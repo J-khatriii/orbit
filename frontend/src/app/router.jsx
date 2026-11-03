@@ -16,6 +16,7 @@ import VerifyEmailPage from "../pages/auth/VerifyEmailPage.jsx";
 import AcceptInvitePage from "../pages/auth/AcceptInvitePage.jsx";
 import TeamPage from "../pages/TeamPage.jsx";
 import ClientsPage from "../pages/ClientsPage.jsx";
+import ClientPage from "../pages/ClientPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
                 : []),
               { path: "*", element: <NotFoundPage />, handle: { title: "Page not found" } },
               { path: "clients", element: <ClientsPage />, handle: { title: "Clients" } },
+              { path: "clients/:clientId", element: <ClientPage />, handle: { title: "Client" } },
             ],
           },
         ],

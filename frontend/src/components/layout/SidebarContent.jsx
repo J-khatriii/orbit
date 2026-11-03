@@ -21,7 +21,7 @@ import { useAuth } from "../../features/auth/authContext.js";
 const NAV = [
   { label: "Overview", to: "/", icon: LayoutGrid },
   { label: "Team", to: "/team", icon: UsersRound, hideFor: ["client"] },
-  { label: "Clients", icon: Users, phase: 3 },
+  { label: "Clients", to: "/clients", icon: Users, hideFor: ["client"] },
   { label: "Projects", icon: Columns3, phase: 3 },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
   { label: "Files", icon: Folder, phase: 6 },

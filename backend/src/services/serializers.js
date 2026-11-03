@@ -77,3 +77,17 @@ export const toActivity = (row) => {
     actor: row.actor_id ? { id: row.actor_id, name: row.actor_name } : null,
   };
 };
+
+export const toContact = (row) => {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    jobTitle: row.job_title,
+    isPrimary: row.is_primary,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};

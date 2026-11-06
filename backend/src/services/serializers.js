@@ -91,3 +91,33 @@ export const toContact = (row) => {
     updatedAt: row.updated_at,
   };
 };
+
+export const toProject = (row) => {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    name: row.name,
+    description: row.description,
+    status: row.status,
+    startDate: row.start_date,
+    dueDate: row.due_date,
+    budgetMinor: row.budget_minor,
+    currency: row.currency,
+    archivedAt: row.archived_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    memberCount: row.member_count,
+  };
+};
+
+export const toProjectMember = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+    avatarUrl: row.avatar_url,
+    role: row.role,
+    addedAt: row.created_at,
+  };
+};

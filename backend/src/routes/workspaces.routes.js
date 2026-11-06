@@ -12,6 +12,7 @@ import * as membersController from "../controllers/members.controller.js";
 import clientsRoutes from "./clients.routes.js";
 import { listActivitySchema } from "../schemas/activity.schemas.js";
 import * as activityController from "../controllers/activity.controller.js";
+import projectsRoutes from "./projects.routes.js";
 
 const router = Router();
 
@@ -92,6 +93,14 @@ router.get(
   requireRole("owner", "admin", "member"),
   validate(listActivitySchema, "query"),
   activityController.listWorkspaceActivity,
+);
+
+// Projects are internal, like clients.
+router.use(
+  "/:workspaceId/projects",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  projectsRoutes,
 );
 
 export default router;

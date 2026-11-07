@@ -1,4 +1,5 @@
 import { Ellipsis } from "lucide-react";
+import { Link } from "react-router";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../../features/projects/constants.js";
 import { formatDay, isOverdue } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
@@ -57,13 +58,18 @@ const RowMenu = ({ project, canArchive, onEdit, onToggleArchive }) => {
   );
 };
 
-const ProjectRow = ({ project, canArchive, onEdit, onToggleArchive }) => {
+const ProjectRow = ({ project, defaultCurrency, canArchive, onEdit, onToggleArchive }) => {
   const overdue = isOverdue(project.dueDate, project.status);
 
   return (
     <li className={`grid items-center gap-x-4 gap-y-1.5 px-4 py-3 ${GRID}`}>
       <div className="col-start-1 row-start-1 min-w-0">
-        <p className="truncate text-sm font-medium text-ink">{project.name}</p>
+        <Link
+          to={`/projects/${project.id}`}
+          className="block truncate text-sm font-medium text-ink hover:text-brand-700 hover:underline"
+        >
+          {project.name}
+        </Link>
         <p className="truncate text-sm text-ink-soft">{project.clientName}</p>
       </div>
 
@@ -92,13 +98,13 @@ const ProjectRow = ({ project, canArchive, onEdit, onToggleArchive }) => {
       <p className="col-span-3 text-sm text-ink-soft md:col-span-1 md:text-right">
         {project.budgetMinor === null
           ? "No budget"
-          : formatMoney(project.budgetMinor, project.currency ?? "USD")}
+          : formatMoney(project.budgetMinor, project.currency ?? defaultCurrency ?? "USD")}
       </p>
     </li>
   );
 };
 
-const ProjectsTable = ({ projects, canArchive, onEdit, onToggleArchive }) => {
+const ProjectsTable = ({ projects, defaultCurrency, canArchive, onEdit, onToggleArchive }) => {
   return (
     <div className="rounded-card bg-surface shadow-card ring-1 ring-line">
       <div
@@ -116,6 +122,7 @@ const ProjectsTable = ({ projects, canArchive, onEdit, onToggleArchive }) => {
             <ProjectRow
               key={project.id}
               project={project}
+              defaultCurrency={defaultCurrency}
               canArchive={canArchive}
               onEdit={onEdit}
               onToggleArchive={onToggleArchive}

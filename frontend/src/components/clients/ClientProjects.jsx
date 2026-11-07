@@ -4,6 +4,7 @@ import { Badge, Button, Card, Spinner } from "../ui/index.js";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../../features/projects/constants.js";
 import { useProjects } from "../../features/projects/useProjects.js";
 import { formatDay, isOverdue } from "../../lib/dates.js";
+import { Link } from "react-router";
 
 // Up to this many of the client's projects, soonest due first (projects without a due
 // date last).
@@ -41,7 +42,12 @@ const ClientProjects = ({ workspaceId, client }) => {
           return (
             <li key={project.id} className="flex flex-wrap items-center gap-3 py-3">
               <div className="min-w-40 flex-1">
-                <p className="text-sm font-medium text-ink">{project.name}</p>
+                <Link
+                  to={`/projects/${project.id}`}
+                  className="text-sm font-medium text-ink hover:text-brand-700 hover:underline"
+                >
+                  {project.name}
+                </Link>
                 <p className={`text-sm ${overdue ? "font-medium text-clay-700" : "text-ink-soft"}`}>
                   {project.dueDate
                     ? `${overdue ? "Overdue · " : "Due "}${formatDay(project.dueDate)}`

@@ -1,4 +1,5 @@
 import * as projectService from "../services/project.service.js";
+import * as activityService from "../services/activity.service.js";
 
 // req.workspace comes from workspaceContext, req.user from requireAuth.
 export const listProjects = async (req, res) => {
@@ -76,4 +77,14 @@ export const removeMember = async (req, res) => {
   });
 
   res.json({ project });
+};
+
+export const listProjectActivity = async (req, res) => {
+  const result = await activityService.listProjectActivity(
+    req.workspace.id,
+    req.params.projectId,
+    req.validated.query,
+  );
+
+  res.json(result);
 };

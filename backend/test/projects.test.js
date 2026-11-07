@@ -581,3 +581,81 @@ describe("keeping workspaces apart", () => {
     ).rejects.toThrow();
   });
 });
+
+const actionsOf = (res) => {
+  return res.body.activity.map((event) => {
+    return event.action;
+  });
+};
+
+describe("a project's own activity", () => {
+  it("lists only that project's events, newest first", async () => {
+    const { owner, workspaceId, clientId, url } = await setup();
+    const member = await addMemberTo(workspaceId, "member");
+    const first = await createProject(owner.agent, url, clientId);
+    const second = await createProject(owner.agent, url, clientId, { name: "Brand refresh" });
+    const projectUrl = `${url}/${first.body.project.id}`;
+
+    await owner.agent.patch(projectUrl).send({ status: "active" });
+    await owner.agent.post(`${projectUrl}/members`).send({ userId: idOf(member) });
+    // Neither of these belongs to the first project.
+    await owner.agent.patch(`${clientsUrl(workspaceId)}/${clientId}`).send({ status: "active" });
+    await owner.agent.patch(`${url}/${second.body.project.id}`).send({ status: "active" });
+
+    const feed = await owner.agent.get(`${projectUrl}/activity`);
+
+    expect(feed.status).toBe(200);
+    expect(actionsOf(feed)).toEqual(["project.member_added", "project.updated", "project.created"]);
+    expect(
+      feed.body.activity.every((event) => {
+        return event.entityId === first.body.project.id;
+      }),
+    ).toBe(true);
+    expect(feed.body.meta).toEqual({ page: 1, pageSize: 20, total: 3, totalPages: 1 });
+  });
+
+  it("pages through the feed", async () => {
+    const { owner, clientId, url } = await setup();
+    const created = await createProject(owner.agent, url, clientId);
+    const projectUrl = `${url}/${created.body.project.id}`;
+
+    await owner.agent.patch(projectUrl).send({ status: "active" });
+    await owner.agent.patch(projectUrl).send({ status: "on_hold" });
+
+    const page1 = await owner.agent.get(`${projectUrl}/activity?pageSize=2`);
+    const page2 = await owner.agent.get(`${projectUrl}/activity?pageSize=2&page=2`);
+
+    expect(page1.body.activity).toHaveLength(2);
+    expect(page1.body.meta).toEqual({ page: 1, pageSize: 2, total: 3, totalPages: 2 });
+    expect(actionsOf(page2)).toEqual(["project.created"]);
+  });
+
+  it("answers 404 for a missing, malformed or other workspace's project", async () => {
+    const { owner, url } = await setup();
+    const other = await createWorkspace("Elsewhere");
+    const otherClient = await makeClient(other.owner.agent, other.workspaceId);
+    const otherProject = await createProject(
+      other.owner.agent,
+      projectsUrl(other.workspaceId),
+      otherClient,
+    );
+
+    for (const id of [MISSING_ID, "not-a-uuid", otherProject.body.project.id]) {
+      const res = await owner.agent.get(`${url}/${id}/activity`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.error.code).toBe("PROJECT_NOT_FOUND");
+    }
+  });
+
+  it("is open to team members and closed to client users", async () => {
+    const { owner, workspaceId, clientId, url } = await setup();
+    const member = await addMemberTo(workspaceId, "member");
+    const portalClient = await addMemberTo(workspaceId, "client");
+    const created = await createProject(owner.agent, url, clientId);
+    const feedUrl = `${url}/${created.body.project.id}/activity`;
+
+    expect((await member.agent.get(feedUrl)).status).toBe(200);
+    expect((await portalClient.agent.get(feedUrl)).status).toBe(403);
+  });
+});

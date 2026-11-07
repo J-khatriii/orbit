@@ -28,3 +28,15 @@ export const useProject = (workspaceId, projectId, enabled = true) => {
     },
   });
 };
+
+export const useProjectActivity = (workspaceId, projectId, pageSize) => {
+  return useQuery({
+    queryKey: [...projectsKey(workspaceId), "activity", projectId, pageSize],
+    queryFn: () => {
+      return projectsApi.activity(workspaceId, projectId, pageSize);
+    },
+    enabled: Boolean(workspaceId),
+    // "Show more" keeps the current lines on screen while the longer list loads.
+    placeholderData: keepPreviousData,
+  });
+};

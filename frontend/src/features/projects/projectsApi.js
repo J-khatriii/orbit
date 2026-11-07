@@ -15,6 +15,11 @@ export const projectsApi = {
   get: (workspaceId, projectId) => {
     return api.get(`/workspaces/${workspaceId}/projects/${projectId}`);
   },
+  activity: (workspaceId, projectId, pageSize) => {
+    return api.get(
+      `/workspaces/${workspaceId}/projects/${projectId}/activity?page=1&pageSize=${pageSize}`,
+    );
+  },
   create: ({ workspaceId, input }) => {
     return api.post(`/workspaces/${workspaceId}/projects`, input);
   },

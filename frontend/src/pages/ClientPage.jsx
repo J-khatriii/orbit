@@ -11,10 +11,11 @@ import { STATUS_LABELS, STATUS_TONES } from "../features/clients/constants.js";
 import { useSetClientArchived } from "../features/clients/useClientMutations.js";
 import { useClient } from "../features/clients/useClients.js";
 import ClientContacts from "../components/clients/ClientContacts.jsx";
+import ClientProjects from "../components/clients/ClientProjects.jsx";
 
 const TABS = [
   { id: "overview", label: "Overview" },
-  { id: "projects", label: "Projects", note: "Projects for this client will appear here." },
+  { id: "projects", label: "Projects" },
   { id: "messages", label: "Messages", note: "Conversations with this client arrive in Phase 5." },
   { id: "files", label: "Files", note: "Shared files arrive in Phase 6." },
   { id: "invoices", label: "Invoices", note: "Invoices and payments arrive in Phase 7." },
@@ -153,7 +154,7 @@ const ClientPage = () => {
       <ClientTabs tabs={TABS} current={tab.id} onChange={changeTab} />
 
       <div role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`}>
-        {tab.id === "overview" ? (
+        {tab.id === "overview" && (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <div className="space-y-6">
               <ClientContacts
@@ -165,7 +166,9 @@ const ClientPage = () => {
             </div>
             <ClientActivity workspaceId={workspaceId} clientId={client.id} />
           </div>
-        ) : (
+        )}
+        {tab.id === "projects" && <ClientProjects workspaceId={workspaceId} client={client} />}
+        {tab.note && (
           <Card title={tab.label}>
             <p className="text-sm text-ink-soft">{tab.note}</p>
           </Card>

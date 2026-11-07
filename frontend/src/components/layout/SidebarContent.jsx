@@ -22,7 +22,7 @@ const NAV = [
   { label: "Overview", to: "/", icon: LayoutGrid },
   { label: "Team", to: "/team", icon: UsersRound, hideFor: ["client"] },
   { label: "Clients", to: "/clients", icon: Users, hideFor: ["client"] },
-  { label: "Projects", icon: Columns3, phase: 3 },
+  { label: "Projects", to: "/projects", icon: Columns3, hideFor: ["client"] },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
   { label: "Files", icon: Folder, phase: 6 },
   { label: "Approvals", icon: CircleCheck, phase: 6 },

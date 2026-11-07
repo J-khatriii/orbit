@@ -1,4 +1,5 @@
 import { STATUS_LABELS } from "./constants.js";
+import { PROJECT_STATUS_LABELS } from "../projects/constants.js";
 
 const FIELD_LABELS = {
   companyName: "company name",
@@ -14,6 +15,10 @@ const FIELD_LABELS = {
   phone: "phone number",
   jobTitle: "job title",
   isPrimary: "primary contact",
+  description: "description",
+  startDate: "start date",
+  dueDate: "due date",
+  budgetMinor: "budget",
 };
 
 const listFields = (fields) => {
@@ -64,6 +69,39 @@ export const describeActivity = (event) => {
     }
     case "contact.deleted": {
       return `removed the contact ${metadata.name}`;
+    }
+    case "project.created": {
+      return `created the project ${metadata.name}`;
+    }
+    case "project.updated": {
+      const others = (metadata.fields ?? []).filter((field) => {
+        return field !== "status";
+      });
+      const parts = [];
+
+      if (metadata.status) {
+        const from = PROJECT_STATUS_LABELS[metadata.status.from];
+        const to = PROJECT_STATUS_LABELS[metadata.status.to];
+
+        parts.push(`moved ${metadata.name} from ${from} to ${to}`);
+      }
+      if (others.length > 0) {
+        parts.push(`updated the ${listFields(others)} of ${metadata.name}`);
+      }
+
+      return parts.join(" and ") || `updated ${metadata.name}`;
+    }
+    case "project.archived": {
+      return `archived the project ${metadata.name}`;
+    }
+    case "project.restored": {
+      return `restored the project ${metadata.name}`;
+    }
+    case "project.member_added": {
+      return `added ${metadata.memberName} to ${metadata.name}`;
+    }
+    case "project.member_removed": {
+      return `removed ${metadata.memberName} from ${metadata.name}`;
     }
     default: {
       return action;

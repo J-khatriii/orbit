@@ -31,6 +31,7 @@ export const createTask = async (req, res) => {
 export const updateTask = async (req, res) => {
   const task = await taskService.updateTask({
     workspaceId: req.workspace.id,
+    userId: req.user.id,
     projectId: req.params.projectId,
     taskId: req.params.taskId,
     input: req.validated.body,
@@ -42,6 +43,7 @@ export const updateTask = async (req, res) => {
 export const moveTask = async (req, res) => {
   const task = await taskService.moveTask({
     workspaceId: req.workspace.id,
+    userId: req.user.id,
     projectId: req.params.projectId,
     taskId: req.params.taskId,
     input: req.validated.body,
@@ -53,6 +55,7 @@ export const moveTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   await taskService.deleteTask({
     workspaceId: req.workspace.id,
+    userId: req.user.id,
     projectId: req.params.projectId,
     taskId: req.params.taskId,
   });

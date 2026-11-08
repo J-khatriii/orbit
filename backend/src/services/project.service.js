@@ -73,6 +73,7 @@ const logProjectEvent = async (
     actorId,
     entityType: "project",
     entityId: project.id,
+    projectId: project.id,
     clientId: project.client_id,
     action,
     metadata: { name: project.name, clientName: project.client_name, ...metadata },

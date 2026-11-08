@@ -444,3 +444,162 @@ describe("guards", () => {
     expect((await addTask(portalClient.agent, ctx.url)).status).toBe(403);
   });
 });
+
+const projectFeed = async (ctx) => {
+  const res = await ctx.owner.agent.get(
+    `${ctx.base}/projects/${ctx.projectId}/activity?pageSize=100`,
+  );
+
+  return res.body.activity;
+};
+
+describe("task activity", () => {
+  it("records who created a task and which fields changed, never the values", async () => {
+    const ctx = await setup();
+    const created = await addTask(ctx.owner.agent, ctx.url);
+    const taskUrl = `${ctx.url}/${created.body.task.id}`;
+    const project = await ctx.owner.agent.get(`${ctx.base}/projects/${ctx.projectId}`);
+    let feed = await projectFeed(ctx);
+
+    expect(feed[0]).toMatchObject({
+      action: "task.created",
+      entityType: "task",
+      entityId: created.body.task.id,
+      projectId: ctx.projectId,
+      clientId: project.body.project.clientId,
+      metadata: { title: "Write brief", projectName: "Website redesign" },
+    });
+
+    await ctx.owner.agent
+      .patch(taskUrl)
+      .send({ title: "Write the brief", priority: "high", description: "Very secret detail" });
+    feed = await projectFeed(ctx);
+
+    expect(feed[0].action).toBe("task.updated");
+    expect([...feed[0].metadata.fields].sort()).toEqual(["description", "priority", "title"]);
+    expect(feed[0].metadata).toMatchObject({
+      title: "Write the brief",
+      previousTitle: "Write brief",
+    });
+    expect(JSON.stringify(feed[0].metadata)).not.toContain("Very secret detail");
+
+    // The same edit again changes nothing, so nothing is recorded.
+    const count = feed.length;
+
+    await ctx.owner.agent.patch(taskUrl).send({ title: "Write the brief", priority: "high" });
+
+    expect((await projectFeed(ctx)).length).toBe(count);
+  });
+
+  it("records a change of column, but not reordering within a column", async () => {
+    const ctx = await setup();
+    const a = await addTask(ctx.owner.agent, ctx.url, { title: "A" });
+    const b = await addTask(ctx.owner.agent, ctx.url, { title: "B" });
+    const taskUrl = `${ctx.url}/${a.body.task.id}`;
+
+    await ctx.owner.agent.patch(taskUrl).send({ status: "done" });
+
+    let feed = await projectFeed(ctx);
+
+    expect(feed[0].metadata).toMatchObject({
+      fields: ["status"],
+      status: { from: "todo", to: "done" },
+    });
+
+    await ctx.owner.agent.post(`${taskUrl}/move`).send({ status: "in_review", afterTaskId: null });
+    feed = await projectFeed(ctx);
+
+    expect(feed[0].metadata.status).toEqual({ from: "done", to: "in_review" });
+
+    // B is alone in To do, so putting it "at the top" doesn't change its column.
+    const count = feed.length;
+
+    await ctx.owner.agent
+      .post(`${ctx.url}/${b.body.task.id}/move`)
+      .send({ status: "todo", afterTaskId: null });
+
+    expect((await projectFeed(ctx)).length).toBe(count);
+  });
+
+  it("records assigning, unassigning and deleting", async () => {
+    const ctx = await setup();
+    const member = await addMemberTo(ctx.workspaceId, "member");
+
+    await putOnTeam(ctx, member);
+
+    const created = await addTask(ctx.owner.agent, ctx.url);
+    const taskUrl = `${ctx.url}/${created.body.task.id}`;
+
+    await ctx.owner.agent.patch(taskUrl).send({ assigneeId: idOf(member) });
+
+    let feed = await projectFeed(ctx);
+
+    expect(feed[0].metadata).toMatchObject({ fields: ["assigneeId"], assigneeName: "Test User" });
+
+    await ctx.owner.agent.patch(taskUrl).send({ assigneeId: null });
+    feed = await projectFeed(ctx);
+
+    expect(feed[0].metadata.assigneeName).toBeNull();
+
+    await ctx.owner.agent.delete(taskUrl);
+    feed = await projectFeed(ctx);
+
+    expect(feed[0]).toMatchObject({
+      action: "task.deleted",
+      entityId: created.body.task.id,
+      metadata: { title: "Write brief" },
+    });
+  });
+
+  it("also shows task events in the client's feed and the workspace feed", async () => {
+    const ctx = await setup();
+    const project = await ctx.owner.agent.get(`${ctx.base}/projects/${ctx.projectId}`);
+    const clientId = project.body.project.clientId;
+
+    await addTask(ctx.owner.agent, ctx.url);
+
+    const clientFeed = await ctx.owner.agent.get(`${ctx.base}/clients/${clientId}/activity`);
+    const workspaceFeed = await ctx.owner.agent.get(`${ctx.base}/activity`);
+
+    for (const feed of [clientFeed, workspaceFeed]) {
+      const actions = feed.body.activity.map((event) => {
+        return event.action;
+      });
+
+      expect(actions).toContain("task.created");
+      expect(actions).toContain("project.created");
+    }
+  });
+});
+
+describe("task counts on projects", () => {
+  it("counts a project's tasks and how many are done", async () => {
+    const ctx = await setup();
+    const a = await addTask(ctx.owner.agent, ctx.url, { title: "A" });
+    const b = await addTask(ctx.owner.agent, ctx.url, { title: "B" });
+
+    await addTask(ctx.owner.agent, ctx.url, { title: "C" });
+    await ctx.owner.agent.patch(`${ctx.url}/${a.body.task.id}`).send({ status: "done" });
+
+    const read = async () => {
+      const single = await ctx.owner.agent.get(`${ctx.base}/projects/${ctx.projectId}`);
+      const list = await ctx.owner.agent.get(`${ctx.base}/projects`);
+      const row = list.body.projects.find((project) => {
+        return project.id === ctx.projectId;
+      });
+
+      return { single: single.body.project, row };
+    };
+
+    let { single, row } = await read();
+
+    expect(single).toMatchObject({ taskCount: 3, tasksDone: 1 });
+    expect(row).toMatchObject({ taskCount: 3, tasksDone: 1 });
+
+    await ctx.owner.agent.delete(`${ctx.url}/${b.body.task.id}`);
+    ({ single, row } = await read());
+
+    expect(single).toMatchObject({ taskCount: 2, tasksDone: 1 });
+    expect(row).toMatchObject({ taskCount: 2, tasksDone: 1 });
+  });
+});

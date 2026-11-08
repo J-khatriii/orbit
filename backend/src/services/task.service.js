@@ -4,6 +4,7 @@ import * as tasksRepository from "../repositories/tasks.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { GAP, positionAfter } from "../utils/ordering.js";
+import { recordActivity } from "./activity.service.js";
 import { loadProject } from "./project.service.js";
 import { toTask } from "./serializers.js";
 
@@ -17,6 +18,12 @@ const COLUMN_NAMES = {
   clientVisible: "client_visible",
 };
 
+const FIELD_NAMES = Object.fromEntries(
+  Object.entries(COLUMN_NAMES).map(([field, column]) => {
+    return [column, field];
+  }),
+);
+
 const toColumns = (input) => {
   const columns = {};
 
@@ -27,6 +34,17 @@ const toColumns = (input) => {
   }
 
   return columns;
+};
+
+// Which fields would this edit really change? Returns their API names.
+const changedFields = (before, columns) => {
+  return Object.entries(columns)
+    .filter(([column, value]) => {
+      return JSON.stringify(before[column]) !== JSON.stringify(value);
+    })
+    .map(([column]) => {
+      return FIELD_NAMES[column];
+    });
 };
 
 const fieldError = (field, message) => {
@@ -87,6 +105,23 @@ const bottomOf = async (executor, projectId, status) => {
   return (last ?? 0) + GAP;
 };
 
+// `task` is a row from the repository, so it has the title as it is now.
+const logTaskEvent = async (
+  executor,
+  { workspaceId, actorId, project, task, action, metadata = {} },
+) => {
+  await recordActivity(executor, {
+    workspaceId,
+    actorId,
+    entityType: "task",
+    entityId: task.id,
+    clientId: project.client_id,
+    projectId: project.id,
+    action,
+    metadata: { title: task.title, projectName: project.name, ...metadata },
+  });
+};
+
 export const listTasks = async (workspaceId, projectId, query) => {
   const project = await loadProject(db, workspaceId, projectId);
   const rows = await tasksRepository.list(db, { workspaceId, projectId: project.id, ...query });
@@ -122,6 +157,19 @@ export const createTask = async ({ workspaceId, userId, projectId, input }) => {
       project_id: project.id,
       created_by: userId,
     });
+    const task = await tasksRepository.findById(trx, {
+      workspaceId,
+      projectId: project.id,
+      id: created.id,
+    });
+
+    await logTaskEvent(trx, {
+      workspaceId,
+      actorId: userId,
+      project,
+      task,
+      action: "task.created",
+    });
 
     return created.id;
   });
@@ -129,7 +177,7 @@ export const createTask = async ({ workspaceId, userId, projectId, input }) => {
   return getTask(workspaceId, projectId, taskId);
 };
 
-export const updateTask = async ({ workspaceId, projectId, taskId, input }) => {
+export const updateTask = async ({ workspaceId, userId, projectId, taskId, input }) => {
   await db.transaction(async (trx) => {
     const project = await loadProject(trx, workspaceId, projectId);
 
@@ -139,6 +187,9 @@ export const updateTask = async ({ workspaceId, projectId, taskId, input }) => {
     const columns = toColumns(input);
 
     await ensureOnTeam(trx, project.id, columns.assignee_id);
+
+    // Worked out before the bookkeeping columns (position, completion) are added.
+    const fields = changedFields(before, columns);
 
     // A new status through an edit lands at the bottom of that column.
     if (columns.status !== undefined && columns.status !== before.status) {
@@ -150,12 +201,41 @@ export const updateTask = async ({ workspaceId, projectId, taskId, input }) => {
     }
 
     await tasksRepository.update(trx, { workspaceId, id: before.id, columns });
+
+    // An edit that changes nothing isn't worth a line in the history.
+    if (fields.length > 0) {
+      const task = await tasksRepository.findById(trx, {
+        workspaceId,
+        projectId: project.id,
+        id: before.id,
+      });
+      const metadata = { fields };
+
+      if (fields.includes("status")) {
+        metadata.status = { from: before.status, to: task.status };
+      }
+      if (fields.includes("title")) {
+        metadata.previousTitle = before.title;
+      }
+      if (fields.includes("assigneeId")) {
+        metadata.assigneeName = task.assignee_name ?? null;
+      }
+
+      await logTaskEvent(trx, {
+        workspaceId,
+        actorId: userId,
+        project,
+        task,
+        action: "task.updated",
+        metadata,
+      });
+    }
   });
 
   return getTask(workspaceId, projectId, taskId);
 };
 
-export const moveTask = async ({ workspaceId, projectId, taskId, input }) => {
+export const moveTask = async ({ workspaceId, userId, projectId, taskId, input }) => {
   await db.transaction(async (trx) => {
     const project = await loadProject(trx, workspaceId, projectId);
 
@@ -187,12 +267,30 @@ export const moveTask = async ({ workspaceId, projectId, taskId, input }) => {
         ...completionColumns(trx, before.status === "done", input.status === "done"),
       },
     });
+
+    // Only a change of column is worth recording. Reordering within one isn't.
+    if (before.status !== input.status) {
+      const task = await tasksRepository.findById(trx, {
+        workspaceId,
+        projectId: project.id,
+        id: before.id,
+      });
+
+      await logTaskEvent(trx, {
+        workspaceId,
+        actorId: userId,
+        project,
+        task,
+        action: "task.updated",
+        metadata: { fields: ["status"], status: { from: before.status, to: task.status } },
+      });
+    }
   });
 
   return getTask(workspaceId, projectId, taskId);
 };
 
-export const deleteTask = async ({ workspaceId, projectId, taskId }) => {
+export const deleteTask = async ({ workspaceId, userId, projectId, taskId }) => {
   await db.transaction(async (trx) => {
     const project = await loadProject(trx, workspaceId, projectId);
 
@@ -201,5 +299,12 @@ export const deleteTask = async ({ workspaceId, projectId, taskId }) => {
     const task = await loadTask(trx, workspaceId, project.id, taskId);
 
     await tasksRepository.remove(trx, { workspaceId, id: task.id });
+    await logTaskEvent(trx, {
+      workspaceId,
+      actorId: userId,
+      project,
+      task,
+      action: "task.deleted",
+    });
   });
 };

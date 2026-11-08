@@ -72,6 +72,7 @@ export const toActivity = (row) => {
     entityType: row.entity_type,
     entityId: row.entity_id,
     clientId: row.client_id,
+    projectId: row.project_id,
     metadata: row.metadata,
     createdAt: row.created_at,
     actor: row.actor_id ? { id: row.actor_id, name: row.actor_name } : null,
@@ -108,6 +109,8 @@ export const toProject = (row) => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     memberCount: row.member_count,
+    taskCount: row.task_count,
+    tasksDone: row.tasks_done,
   };
 };
 

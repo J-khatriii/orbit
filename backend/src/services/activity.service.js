@@ -11,7 +11,16 @@ import { getProject } from "./project.service.js";
 //   metadata     a few details for displaying the event. Never put secrets or notes here.
 export const recordActivity = async (
   executor,
-  { workspaceId, actorId, entityType, entityId, clientId = null, action, metadata = {} },
+  {
+    workspaceId,
+    actorId,
+    entityType,
+    entityId,
+    clientId = null,
+    projectId = null,
+    action,
+    metadata = {},
+  },
 ) => {
   await activityRepository.create(executor, {
     workspace_id: workspaceId,
@@ -19,17 +28,17 @@ export const recordActivity = async (
     entity_type: entityType,
     entity_id: entityId,
     client_id: clientId,
+    project_id: projectId,
     action,
     metadata,
   });
 };
 
-const listPage = async ({ workspaceId, clientId, entityType, entityId, page, pageSize }) => {
+const listPage = async ({ workspaceId, clientId, projectId, page, pageSize }) => {
   const { rows, total } = await activityRepository.list(db, {
     workspaceId,
     clientId,
-    entityType,
-    entityId,
+    projectId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
@@ -41,6 +50,7 @@ const listPage = async ({ workspaceId, clientId, entityType, entityId, page, pag
     meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
   };
 };
+
 export const listWorkspaceActivity = async (workspaceId, query) => {
   return listPage({ workspaceId, ...query });
 };
@@ -56,5 +66,5 @@ export const listProjectActivity = async (workspaceId, projectId, query) => {
   // Throws 404 if the project isn't in this workspace (or the id is malformed).
   await getProject(workspaceId, projectId);
 
-  return listPage({ workspaceId, entityType: "project", entityId: projectId, ...query });
+  return listPage({ workspaceId, projectId, ...query });
 };

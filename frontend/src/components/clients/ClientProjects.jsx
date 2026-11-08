@@ -5,6 +5,7 @@ import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../../features/proj
 import { useProjects } from "../../features/projects/useProjects.js";
 import { formatDay, isOverdue } from "../../lib/dates.js";
 import { Link } from "react-router";
+import TaskProgress from "../projects/TaskProgress.jsx";
 
 // Up to this many of the client's projects, soonest due first (projects without a due
 // date last).
@@ -53,6 +54,13 @@ const ClientProjects = ({ workspaceId, client }) => {
                     ? `${overdue ? "Overdue · " : "Due "}${formatDay(project.dueDate)}`
                     : "No due date"}
                 </p>
+
+                <TaskProgress
+                  done={project.tasksDone}
+                  total={project.taskCount}
+                  compact
+                  className="mt-1.5"
+                />
               </div>
               <Badge tone={PROJECT_STATUS_TONES[project.status]} dot>
                 {PROJECT_STATUS_LABELS[project.status]}

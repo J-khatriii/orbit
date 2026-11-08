@@ -4,6 +4,7 @@ import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../../features/proj
 import { formatDay, isOverdue } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
 import { Badge, Dropdown, DropdownItem } from "../ui/index.js";
+import TaskProgress from "./TaskProgress.jsx";
 
 // A phone shows name, status and the menu on one line, then due date and budget below.
 // From tablet width up it's five columns.
@@ -71,6 +72,8 @@ const ProjectRow = ({ project, defaultCurrency, canArchive, onEdit, onToggleArch
           {project.name}
         </Link>
         <p className="truncate text-sm text-ink-soft">{project.clientName}</p>
+
+        <TaskProgress done={project.tasksDone} total={project.taskCount} compact className="mt-2" />
       </div>
 
       <div className="col-start-2 row-start-1 flex flex-wrap items-center gap-1.5 justify-self-end md:justify-self-start">

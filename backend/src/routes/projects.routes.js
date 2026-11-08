@@ -9,6 +9,7 @@ import {
 } from "../schemas/projects.schemas.js";
 import * as projectsController from "../controllers/projects.controller.js";
 import { listActivitySchema } from "../schemas/activity.schemas.js";
+import tasksRoutes from "./tasks.routes.js";
 
 // Mounted under /workspaces/:workspaceId/projects. By the time a request gets here,
 // workspaceContext has checked the workspace and role (owner, admin or member).
@@ -38,5 +39,6 @@ router.post(
 
 router.post("/:projectId/members", validate(addProjectMemberSchema), projectsController.addMember);
 router.delete("/:projectId/members/:userId", projectsController.removeMember);
+router.use("/:projectId/tasks", tasksRoutes);
 
 export default router;

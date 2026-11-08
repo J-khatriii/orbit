@@ -79,7 +79,7 @@ const logProjectEvent = async (
   });
 };
 
-const loadProject = async (executor, workspaceId, projectId) => {
+export const loadProject = async (executor, workspaceId, projectId) => {
   const row = isUuid(projectId)
     ? await projectsRepository.findById(executor, { workspaceId, id: projectId })
     : undefined;

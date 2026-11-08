@@ -121,3 +121,24 @@ export const toProjectMember = (row) => {
     addedAt: row.created_at,
   };
 };
+
+export const toTask = (row) => {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    priority: row.priority,
+    assigneeId: row.assignee_id,
+    assignee: row.assignee_id
+      ? { id: row.assignee_id, name: row.assignee_name, avatarUrl: row.assignee_avatar_url }
+      : null,
+    dueDate: row.due_date,
+    position: row.position,
+    clientVisible: row.client_visible,
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};

@@ -1,5 +1,6 @@
 import { STATUS_LABELS } from "./constants.js";
 import { PROJECT_STATUS_LABELS } from "../projects/constants.js";
+import { TASK_STATUS_LABELS } from "../tasks/constants.js";
 
 const FIELD_LABELS = {
   companyName: "company name",
@@ -19,6 +20,9 @@ const FIELD_LABELS = {
   startDate: "start date",
   dueDate: "due date",
   budgetMinor: "budget",
+  title: "title",
+  priority: "priority",
+  assigneeId: "assignee",
 };
 
 const listFields = (fields) => {
@@ -102,6 +106,44 @@ export const describeActivity = (event) => {
     }
     case "project.member_removed": {
       return `removed ${metadata.memberName} from ${metadata.name}`;
+    }
+    case "task.created": {
+      return `added the task ${metadata.title} to ${metadata.projectName}`;
+    }
+    case "task.updated": {
+      const fields = metadata.fields ?? [];
+      const others = fields.filter((field) => {
+        return field !== "status" && field !== "assigneeId" && field !== "title";
+      });
+      const parts = [];
+
+      if (metadata.status) {
+        const { from, to } = metadata.status;
+
+        parts.push(
+          to === "done"
+            ? `completed ${metadata.title}`
+            : `moved ${metadata.title} from ${TASK_STATUS_LABELS[from]} to ${TASK_STATUS_LABELS[to]}`,
+        );
+      }
+      if (fields.includes("assigneeId")) {
+        parts.push(
+          metadata.assigneeName
+            ? `assigned ${metadata.title} to ${metadata.assigneeName}`
+            : `unassigned ${metadata.title}`,
+        );
+      }
+      if (fields.includes("title") && metadata.previousTitle) {
+        parts.push(`renamed ${metadata.previousTitle} to ${metadata.title}`);
+      }
+      if (others.length > 0) {
+        parts.push(`updated the ${listFields(others)} of ${metadata.title}`);
+      }
+
+      return parts.join(" and ") || `updated ${metadata.title}`;
+    }
+    case "task.deleted": {
+      return `deleted the task ${metadata.title}`;
     }
     default: {
       return action;

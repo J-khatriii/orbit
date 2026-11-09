@@ -72,6 +72,7 @@ export const toActivity = (row) => {
     entityType: row.entity_type,
     entityId: row.entity_id,
     clientId: row.client_id,
+    projectId: row.project_id,
     metadata: row.metadata,
     createdAt: row.created_at,
     actor: row.actor_id ? { id: row.actor_id, name: row.actor_name } : null,
@@ -108,6 +109,8 @@ export const toProject = (row) => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     memberCount: row.member_count,
+    taskCount: row.task_count,
+    tasksDone: row.tasks_done,
   };
 };
 
@@ -119,5 +122,26 @@ export const toProjectMember = (row) => {
     avatarUrl: row.avatar_url,
     role: row.role,
     addedAt: row.created_at,
+  };
+};
+
+export const toTask = (row) => {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    priority: row.priority,
+    assigneeId: row.assignee_id,
+    assignee: row.assignee_id
+      ? { id: row.assignee_id, name: row.assignee_name, avatarUrl: row.assignee_avatar_url }
+      : null,
+    dueDate: row.due_date,
+    position: row.position,
+    clientVisible: row.client_visible,
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 };

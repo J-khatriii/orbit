@@ -16,3 +16,4 @@ export { default as Dropdown } from "./Dropdown.jsx";
 export { default as DropdownItem } from "./DropdownItem.jsx";
 export { default as Drawer } from "./Drawer.jsx";
 export { default as Pagination } from "./Pagination.jsx";
+export { default as SidePanel } from "./SidePanel.jsx";

@@ -1,11 +1,11 @@
 import { cn } from "../../lib/cn.js";
 
 // The row of tabs under the client's name. Each tab is {id, label}.
-const ClientTabs = ({ tabs, current, onChange }) => {
+const ClientTabs = ({ tabs, current, onChange, label = "Client sections" }) => {
   return (
     <div
       role="tablist"
-      aria-label="Client sections"
+      aria-label={label}
       className="flex gap-1 overflow-x-auto border-b border-line"
     >
       {tabs.map((tab) => {

@@ -73,13 +73,14 @@ const logProjectEvent = async (
     actorId,
     entityType: "project",
     entityId: project.id,
+    projectId: project.id,
     clientId: project.client_id,
     action,
     metadata: { name: project.name, clientName: project.client_name, ...metadata },
   });
 };
 
-const loadProject = async (executor, workspaceId, projectId) => {
+export const loadProject = async (executor, workspaceId, projectId) => {
   const row = isUuid(projectId)
     ? await projectsRepository.findById(executor, { workspaceId, id: projectId })
     : undefined;

@@ -36,6 +36,10 @@ const selectColumns = (executor) => {
     executor.raw(
       "(SELECT count(*) FROM project_members pm WHERE pm.project_id = projects.id) AS member_count",
     ),
+    executor.raw("(SELECT count(*) FROM tasks t WHERE t.project_id = projects.id) AS task_count"),
+    executor.raw(
+      "(SELECT count(*) FROM tasks t WHERE t.project_id = projects.id AND t.status = 'done') AS tasks_done",
+    ),
   ];
 };
 

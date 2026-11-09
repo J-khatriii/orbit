@@ -53,6 +53,7 @@ const readChecks = ({ base, clientId, projectId }) => {
       ok: 200,
     },
     { label: "workspace activity", method: "get", path: `${base}/activity`, ok: 200 },
+    { label: "my tasks", method: "get", path: `${base}/my-tasks`, ok: 200 },
   ];
 };
 

@@ -145,3 +145,13 @@ export const toTask = (row) => {
     updatedAt: row.updated_at,
   };
 };
+
+// A task plus where it lives, for lists that span projects.
+export const toMyTask = (row) => {
+  return {
+    ...toTask(row),
+    projectName: row.project_name,
+    clientId: row.client_id,
+    clientName: row.client_name,
+  };
+};

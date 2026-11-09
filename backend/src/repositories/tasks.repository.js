@@ -114,3 +114,51 @@ export const renumberColumn = async (executor, { projectId, status }) => {
     [projectId, status],
   );
 };
+
+const PRIORITY_RANK =
+  "CASE tasks.priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END";
+
+// One person's tasks in the workspace's live (not archived) projects, with where each lives.
+// Open work comes soonest-due first (no due date last, then most urgent), finished work
+// most recently completed first.
+export const listAssignedTo = async (executor, { workspaceId, userId, view, limit, offset }) => {
+  const filtered = () => {
+    const query = executor("tasks")
+      .join("projects", "projects.id", "tasks.project_id")
+      .join("clients", "clients.id", "projects.client_id")
+      .where({ "tasks.workspace_id": workspaceId, "tasks.assignee_id": userId })
+      .whereNull("projects.archived_at");
+
+    if (view === "open") {
+      query.whereNot("tasks.status", "done");
+    } else if (view === "done") {
+      query.where("tasks.status", "done");
+    }
+
+    return query;
+  };
+
+  const countRow = await filtered().count({ count: "*" }).first();
+  const rows = await filtered()
+    .leftJoin("users", "users.id", "tasks.assignee_id")
+    .select([
+      ...selectColumns(),
+      "projects.name as project_name",
+      "projects.client_id as client_id",
+      "clients.company_name as client_name",
+    ])
+    .modify((query) => {
+      if (view === "done") {
+        query.orderBy([{ column: "tasks.completed_at", order: "desc" }, { column: "tasks.id" }]);
+      } else {
+        query
+          .orderByRaw("tasks.due_date ASC NULLS LAST")
+          .orderByRaw(PRIORITY_RANK)
+          .orderBy([{ column: "tasks.created_at" }, { column: "tasks.id" }]);
+      }
+    })
+    .limit(limit)
+    .offset(offset);
+
+  return { rows, total: Number(countRow.count) };
+};

@@ -9,6 +9,7 @@ import {
   Receipt,
   Users,
   UsersRound,
+  ListChecks,
 } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import { cn } from "../../lib/cn.js";
@@ -23,6 +24,7 @@ const NAV = [
   { label: "Team", to: "/team", icon: UsersRound, hideFor: ["client"] },
   { label: "Clients", to: "/clients", icon: Users, hideFor: ["client"] },
   { label: "Projects", to: "/projects", icon: Columns3, hideFor: ["client"] },
+  { label: "My tasks", to: "/my-tasks", icon: ListChecks, hideFor: ["client"] },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
   { label: "Files", icon: Folder, phase: 6 },
   { label: "Approvals", icon: CircleCheck, phase: 6 },

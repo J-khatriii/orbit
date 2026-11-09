@@ -20,4 +20,7 @@ export const tasksApi = {
   remove: ({ workspaceId, projectId, taskId }) => {
     return api.delete(`${tasksUrl(workspaceId, projectId)}/${taskId}`);
   },
+  mine: (workspaceId, view) => {
+    return api.get(`/workspaces/${workspaceId}/my-tasks?view=${view}&pageSize=200`);
+  },
 };

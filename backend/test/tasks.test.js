@@ -603,3 +603,91 @@ describe("task counts on projects", () => {
     expect(row).toMatchObject({ taskCount: 2, tasksDone: 1 });
   });
 });
+
+describe("my tasks", () => {
+  // A workspace with two projects, a team member, and tasks assigned in various ways.
+  const setupMyTasks = async () => {
+    const ctx = await setup();
+    const member = await addMemberTo(ctx.workspaceId, "member");
+    const project = await ctx.owner.agent.get(`${ctx.base}/projects/${ctx.projectId}`);
+    const second = await ctx.owner.agent
+      .post(`${ctx.base}/projects`)
+      .send({ clientId: project.body.project.clientId, name: "Packaging" });
+    const secondId = second.body.project.id;
+    const urlB = `${ctx.base}/projects/${secondId}/tasks`;
+
+    await putOnTeam(ctx, member);
+    await putOnTeam(ctx, ctx.owner);
+    await ctx.owner.agent
+      .post(`${ctx.base}/projects/${secondId}/members`)
+      .send({ userId: idOf(member) });
+
+    const mine = idOf(member);
+    const make = (url, body) => {
+      return addTask(ctx.owner.agent, url, body);
+    };
+
+    await make(ctx.url, { title: "nodue", assigneeId: mine });
+    await make(ctx.url, { title: "low", dueDate: "2030-01-01", priority: "low", assigneeId: mine });
+    await make(ctx.url, {
+      title: "urgent",
+      dueDate: "2030-01-01",
+      priority: "urgent",
+      assigneeId: mine,
+    });
+    await make(ctx.url, { title: "late", dueDate: "2020-01-01", assigneeId: mine });
+    await make(urlB, { title: "b1", dueDate: "2025-06-01", assigneeId: mine });
+    await make(ctx.url, { title: "finished", status: "done", assigneeId: mine });
+    await make(ctx.url, { title: "theirs", assigneeId: idOf(ctx.owner) });
+    await make(ctx.url, { title: "unassigned" });
+
+    return { ...ctx, member, secondId };
+  };
+
+  it("lists only my tasks, soonest due first, with their project and client", async () => {
+    const ctx = await setupMyTasks();
+    const res = await ctx.member.agent.get(`${ctx.base}/my-tasks`);
+
+    expect(res.status).toBe(200);
+    // By due date (none last), then the most urgent first.
+    expect(titlesOf(res)).toEqual(["late", "b1", "urgent", "low", "nodue"]);
+    expect(res.body.tasks[1]).toMatchObject({
+      projectId: ctx.secondId,
+      projectName: "Packaging",
+      clientName: "Northwind Studio",
+      assignee: { id: idOf(ctx.member) },
+    });
+    expect(res.body.meta).toEqual({ page: 1, pageSize: 100, total: 5, totalPages: 1 });
+
+    const done = await ctx.member.agent.get(`${ctx.base}/my-tasks?view=done`);
+    const all = await ctx.member.agent.get(`${ctx.base}/my-tasks?view=all`);
+    const owners = await ctx.owner.agent.get(`${ctx.base}/my-tasks`);
+
+    expect(titlesOf(done)).toEqual(["finished"]);
+    expect(titlesOf(all)).toHaveLength(6);
+    expect(titlesOf(owners)).toEqual(["theirs"]);
+  });
+
+  it("hides the tasks of archived projects", async () => {
+    const ctx = await setupMyTasks();
+
+    await ctx.owner.agent.post(`${ctx.base}/projects/${ctx.projectId}/archive`);
+
+    expect(titlesOf(await ctx.member.agent.get(`${ctx.base}/my-tasks`))).toEqual(["b1"]);
+
+    await ctx.owner.agent.post(`${ctx.base}/projects/${ctx.projectId}/restore`);
+
+    expect(titlesOf(await ctx.member.agent.get(`${ctx.base}/my-tasks`))).toHaveLength(5);
+  });
+
+  it("pages through the list and rejects a bad view", async () => {
+    const ctx = await setupMyTasks();
+    const first = await ctx.member.agent.get(`${ctx.base}/my-tasks?pageSize=2`);
+    const second = await ctx.member.agent.get(`${ctx.base}/my-tasks?pageSize=2&page=2`);
+
+    expect(titlesOf(first)).toEqual(["late", "b1"]);
+    expect(first.body.meta).toEqual({ page: 1, pageSize: 2, total: 5, totalPages: 3 });
+    expect(titlesOf(second)).toEqual(["urgent", "low"]);
+    expect((await ctx.member.agent.get(`${ctx.base}/my-tasks?view=banana`)).status).toBe(400);
+  });
+});

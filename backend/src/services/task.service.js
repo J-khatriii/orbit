@@ -6,7 +6,7 @@ import { isUuid } from "../utils/isUuid.js";
 import { GAP, positionAfter } from "../utils/ordering.js";
 import { recordActivity } from "./activity.service.js";
 import { loadProject } from "./project.service.js";
-import { toTask } from "./serializers.js";
+import { toMyTask, toTask } from "./serializers.js";
 
 const COLUMN_NAMES = {
   title: "title",
@@ -307,4 +307,22 @@ export const deleteTask = async ({ workspaceId, userId, projectId, taskId }) => 
       action: "task.deleted",
     });
   });
+};
+
+export const listMyTasks = async (workspaceId, userId, query) => {
+  const { view, page, pageSize } = query;
+  const { rows, total } = await tasksRepository.listAssignedTo(db, {
+    workspaceId,
+    userId,
+    view,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
+
+  return {
+    tasks: rows.map((row) => {
+      return toMyTask(row);
+    }),
+    meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) },
+  };
 };

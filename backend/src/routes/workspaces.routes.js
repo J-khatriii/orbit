@@ -13,6 +13,8 @@ import clientsRoutes from "./clients.routes.js";
 import { listActivitySchema } from "../schemas/activity.schemas.js";
 import * as activityController from "../controllers/activity.controller.js";
 import projectsRoutes from "./projects.routes.js";
+import { listMyTasksSchema } from "../schemas/tasks.schemas.js";
+import * as tasksController from "../controllers/tasks.controller.js";
 
 const router = Router();
 
@@ -93,6 +95,15 @@ router.get(
   requireRole("owner", "admin", "member"),
   validate(listActivitySchema, "query"),
   activityController.listWorkspaceActivity,
+);
+
+// Everything assigned to me, across projects. Internal, like the other lists.
+router.get(
+  "/:workspaceId/my-tasks",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  validate(listMyTasksSchema, "query"),
+  tasksController.listMyTasks,
 );
 
 // Projects are internal, like clients.

@@ -29,11 +29,20 @@ import {
 import { TASK_STATUS_LABELS } from "../../features/tasks/constants.js";
 import { useMoveTask } from "../../features/tasks/useTaskMutations.js";
 
-const SortableTaskCard = ({ task, locked }) => {
+const SortableTaskCard = ({ task, locked, onOpen }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     disabled: locked,
   });
+
+  // The drag sensors also listen for keys. Let them see the key first, then Enter opens.
+  const handleKeyDown = (event) => {
+    listeners?.onKeyDown?.(event);
+
+    if (event.key === "Enter" && !event.defaultPrevented) {
+      onOpen(task);
+    }
+  };
 
   return (
     <li>
@@ -42,6 +51,11 @@ const SortableTaskCard = ({ task, locked }) => {
         style={{ transform: CSS.Transform.toString(transform), transition }}
         {...attributes}
         {...listeners}
+        onKeyDown={handleKeyDown}
+        // A drag doesn't count as a click, so this only fires for a real click.
+        onClick={() => {
+          onOpen(task);
+        }}
         className={`rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
           isDragging ? "opacity-40" : ""
         }`}
@@ -52,7 +66,7 @@ const SortableTaskCard = ({ task, locked }) => {
   );
 };
 
-const BoardColumn = ({ status, tasks, locked }) => {
+const BoardColumn = ({ status, tasks, locked, onOpen }) => {
   // The list itself is a drop target, so a card can be dropped into an empty column.
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -78,7 +92,7 @@ const BoardColumn = ({ status, tasks, locked }) => {
           }`}
         >
           {tasks.map((task) => {
-            return <SortableTaskCard key={task.id} task={task} locked={locked} />;
+            return <SortableTaskCard key={task.id} task={task} locked={locked} onOpen={onOpen} />;
           })}
         </ul>
       </SortableContext>
@@ -86,7 +100,7 @@ const BoardColumn = ({ status, tasks, locked }) => {
   );
 };
 
-const TaskBoard = ({ workspaceId, project, tasks, locked }) => {
+const TaskBoard = ({ workspaceId, project, tasks, locked, onOpen }) => {
   const toast = useToast();
   const move = useMoveTask();
   // While dragging, and until the server has answered, we show our own arrangement
@@ -110,11 +124,15 @@ const TaskBoard = ({ workspaceId, project, tasks, locked }) => {
   const activeTask = activeId ? tasksById.get(activeId) : null;
 
   const sensors = useSensors(
-    // A small movement starts a mouse drag, so plain clicks still work later.
+    // A small movement starts a mouse drag, so plain clicks still open the task.
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     // On touch screens a short press starts the drag, so swiping still scrolls the page.
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    // Space lifts and drops a card. Enter is kept free for opening it.
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      keyboardCodes: { start: ["Space"], cancel: ["Escape"], end: ["Space"] },
+    }),
   );
 
   // Back to what we showed before the drag began (or to the server's, if nothing's pending).
@@ -202,7 +220,15 @@ const TaskBoard = ({ workspaceId, project, tasks, locked }) => {
             })
             .filter(Boolean);
 
-          return <BoardColumn key={status} status={status} tasks={columnTasks} locked={locked} />;
+          return (
+            <BoardColumn
+              key={status}
+              status={status}
+              tasks={columnTasks}
+              locked={locked}
+              onOpen={onOpen}
+            />
+          );
         })}
       </div>
       <DragOverlay>{activeTask ? <TaskCard task={activeTask} overlay /> : null}</DragOverlay>

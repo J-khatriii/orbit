@@ -3,7 +3,7 @@ import TaskMeta from "./TaskMeta.jsx";
 import { TASK_STATUS_LABELS } from "../../features/tasks/constants.js";
 import { Dropdown, DropdownItem } from "../ui/index.js";
 
-const TaskRow = ({ task, locked, onToggleDone, onChangeStatus, onDelete }) => {
+const TaskRow = ({ task, locked, onOpen, onToggleDone, onChangeStatus, onDelete }) => {
   const done = task.status === "done";
 
   return (
@@ -20,11 +20,17 @@ const TaskRow = ({ task, locked, onToggleDone, onChangeStatus, onDelete }) => {
       />
 
       <div className="min-w-0 flex-1">
-        <p
-          className={`truncate text-sm ${done ? "text-ink-muted line-through" : "font-medium text-ink"}`}
+        <button
+          type="button"
+          onClick={() => {
+            onOpen(task);
+          }}
+          className={`block w-full truncate text-left text-sm hover:underline focus:outline-none focus-visible:underline ${
+            done ? "text-ink-muted line-through" : "font-medium text-ink"
+          }`}
         >
           {task.title}
-        </p>
+        </button>
         <TaskMeta task={task} />
       </div>
 

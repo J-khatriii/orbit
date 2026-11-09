@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import TaskBoard from "./TaskBoard.jsx";
+import TaskDrawer from "./TaskDrawer.jsx";
 import TaskQuickAdd from "./TaskQuickAdd.jsx";
 import TaskRow from "./TaskRow.jsx";
 import { Button, Modal, Spinner, useToast } from "../ui/index.js";
@@ -34,6 +35,12 @@ const ProjectTasks = ({ workspaceId, project }) => {
   const busyId = update.isPending ? update.variables.taskId : null;
   // The view lives in the address (?view=board), so a reload keeps it.
   const view = searchParams.get("view") === "board" ? "board" : "list";
+  // The open task lives in the address (?task=...), so it can be linked to, and Back closes it.
+  const selectedId = searchParams.get("task");
+  const selectedTask =
+    (tasks.data ?? []).find((task) => {
+      return task.id === selectedId;
+    }) ?? null;
 
   const changeView = (next) => {
     setSearchParams(
@@ -45,6 +52,29 @@ const ProjectTasks = ({ workspaceId, project }) => {
         } else {
           params.delete("view");
         }
+
+        return params;
+      },
+      { replace: true },
+    );
+  };
+
+  const openTask = (task) => {
+    setSearchParams((current) => {
+      const params = new URLSearchParams(current);
+
+      params.set("task", task.id);
+
+      return params;
+    });
+  };
+
+  const closeTask = () => {
+    setSearchParams(
+      (current) => {
+        const params = new URLSearchParams(current);
+
+        params.delete("task");
 
         return params;
       },
@@ -117,6 +147,7 @@ const ProjectTasks = ({ workspaceId, project }) => {
               key={task.id}
               task={task}
               locked={locked || busyId === task.id}
+              onOpen={openTask}
               onToggleDone={handleToggleDone}
               onChangeStatus={handleChangeStatus}
               onDelete={setDeleting}
@@ -148,7 +179,13 @@ const ProjectTasks = ({ workspaceId, project }) => {
     }
     if (view === "board") {
       return (
-        <TaskBoard workspaceId={workspaceId} project={project} tasks={tasks.data} locked={locked} />
+        <TaskBoard
+          workspaceId={workspaceId}
+          project={project}
+          tasks={tasks.data}
+          locked={locked}
+          onOpen={openTask}
+        />
       );
     }
 
@@ -220,6 +257,17 @@ const ProjectTasks = ({ workspaceId, project }) => {
       )}
 
       {renderContent()}
+
+      {selectedTask && (
+        <TaskDrawer
+          key={selectedTask.id}
+          workspaceId={workspaceId}
+          project={project}
+          task={selectedTask}
+          locked={locked}
+          onClose={closeTask}
+        />
+      )}
 
       <Modal
         open={Boolean(deleting)}

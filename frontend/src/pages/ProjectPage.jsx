@@ -12,6 +12,7 @@ import { useAuth } from "../features/auth/authContext.js";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../features/projects/constants.js";
 import { useSetProjectArchived } from "../features/projects/useProjectMutations.js";
 import { useProject } from "../features/projects/useProjects.js";
+import SaveAsTemplateButton from "../components/templates/SaveAsTemplateButton.jsx";
 
 const ProjectPage = () => {
   const { projectId } = useParams();
@@ -138,6 +139,8 @@ const ProjectPage = () => {
             </Button>
           )}
         </div>
+
+        <SaveAsTemplateButton project={project} />
       </header>
 
       <ClientTabs tabs={tabs} current={tab.id} onChange={changeTab} label="Project sections" />

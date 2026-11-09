@@ -75,7 +75,11 @@ export const describeActivity = (event) => {
       return `removed the contact ${metadata.name}`;
     }
     case "project.created": {
-      return `created the project ${metadata.name}`;
+      const template = metadata.templateName;
+
+      return template
+        ? `created the project ${metadata.name} from the template ${template}`
+        : `created the project ${metadata.name}`;
     }
     case "project.updated": {
       const others = (metadata.fields ?? []).filter((field) => {

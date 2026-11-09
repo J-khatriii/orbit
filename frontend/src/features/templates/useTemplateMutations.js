@@ -24,3 +24,6 @@ export const useUpdateTemplate = () => {
 export const useDeleteTemplate = () => {
   return useTemplateMutation(templatesApi.remove);
 };
+export const useSaveProjectAsTemplate = () => {
+  return useTemplateMutation(templatesApi.saveFromProject);
+};

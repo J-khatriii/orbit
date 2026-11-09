@@ -7,6 +7,7 @@ import { PROJECT_STATUS_LABELS } from "../../features/projects/constants.js";
 import { useCreateProject, useUpdateProject } from "../../features/projects/useProjectMutations.js";
 import { validateProjectForm } from "../../features/projects/validation.js";
 import { minorToInput, parseMoney } from "../../lib/money.js";
+import TemplatePicker from "../templates/TemplatePicker.jsx";
 
 const controlClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500";
@@ -33,6 +34,7 @@ const valuesOf = (project, fixedClient, defaultCurrency) => {
         : minorToInput(project.budgetMinor, project.currency ?? defaultCurrency),
     currency: project?.currency ?? "",
     description: project?.description ?? "",
+    templateId: "",
   };
 };
 
@@ -75,7 +77,17 @@ const ProjectFormModal = ({ workspaceId, project, fixedClient, onClose }) => {
     if (project) {
       update.mutate({ workspaceId, projectId: project.id, input }, handlers);
     } else {
-      create.mutate({ workspaceId, input: { ...input, clientId: values.clientId } }, handlers);
+      create.mutate(
+        {
+          workspaceId,
+          input: {
+            ...input,
+            clientId: values.clientId,
+            templateId: values.templateId || null,
+          },
+        },
+        handlers,
+      );
     }
   };
 
@@ -107,6 +119,15 @@ const ProjectFormModal = ({ workspaceId, project, fixedClient, onClose }) => {
     >
       <form noValidate onSubmit={handleSubmit} className="space-y-4">
         <FormError message={form.formError} />
+        {!project && (
+          <TemplatePicker
+            workspaceId={workspaceId}
+            value={form.values.templateId}
+            onChange={(templateId) => {
+              form.setValue("templateId", templateId);
+            }}
+          />
+        )}
         <Input
           label="Project name"
           name="name"

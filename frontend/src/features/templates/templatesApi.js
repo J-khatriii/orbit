@@ -16,4 +16,7 @@ export const templatesApi = {
   remove: ({ workspaceId, templateId }) => {
     return api.delete(`/workspaces/${workspaceId}/templates/${templateId}`);
   },
+  saveFromProject: ({ workspaceId, projectId, input }) => {
+    return api.post(`/workspaces/${workspaceId}/projects/${projectId}/save-as-template`, input);
+  },
 };

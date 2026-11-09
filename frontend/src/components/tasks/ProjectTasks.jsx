@@ -1,9 +1,17 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
+import TaskBoard from "./TaskBoard.jsx";
 import TaskQuickAdd from "./TaskQuickAdd.jsx";
 import TaskRow from "./TaskRow.jsx";
 import { Button, Modal, Spinner, useToast } from "../ui/index.js";
 import { useDeleteTask, useUpdateTask } from "../../features/tasks/useTaskMutations.js";
 import { useTasks } from "../../features/tasks/useTasks.js";
+import { cn } from "../../lib/cn.js";
+
+const VIEWS = [
+  { id: "list", label: "List" },
+  { id: "board", label: "Board" },
+];
 
 const matchesFilter = (task, filter) => {
   if (filter === "all") {
@@ -15,6 +23,7 @@ const matchesFilter = (task, filter) => {
 
 const ProjectTasks = ({ workspaceId, project }) => {
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tasks = useTasks(workspaceId, project.id);
   const update = useUpdateTask();
   const remove = useDeleteTask();
@@ -23,6 +32,25 @@ const ProjectTasks = ({ workspaceId, project }) => {
   // An archived project's tasks can be read but not changed.
   const locked = Boolean(project.archivedAt);
   const busyId = update.isPending ? update.variables.taskId : null;
+  // The view lives in the address (?view=board), so a reload keeps it.
+  const view = searchParams.get("view") === "board" ? "board" : "list";
+
+  const changeView = (next) => {
+    setSearchParams(
+      (current) => {
+        const params = new URLSearchParams(current);
+
+        if (next === "board") {
+          params.set("view", "board");
+        } else {
+          params.delete("view");
+        }
+
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
   const change = (task, input) => {
     update.mutate(
@@ -63,25 +91,6 @@ const ProjectTasks = ({ workspaceId, project }) => {
   };
 
   const renderList = () => {
-    if (tasks.isPending) {
-      return (
-        <div role="status" className="flex justify-center py-12 text-ink-muted">
-          <Spinner className="size-5" />
-          <span className="sr-only">Loading</span>
-        </div>
-      );
-    }
-    if (tasks.isError) {
-      return (
-        <div className="rounded-card bg-surface p-6 shadow-card ring-1 ring-line">
-          <p className="mb-4 text-sm text-ink-soft">{tasks.error.message}</p>
-          <Button variant="secondary" onClick={tasks.refetch}>
-            Try again
-          </Button>
-        </div>
-      );
-    }
-
     const visible = tasks.data.filter((task) => {
       return matchesFilter(task, filter);
     });
@@ -118,6 +127,34 @@ const ProjectTasks = ({ workspaceId, project }) => {
     );
   };
 
+  const renderContent = () => {
+    if (tasks.isPending) {
+      return (
+        <div role="status" className="flex justify-center py-12 text-ink-muted">
+          <Spinner className="size-5" />
+          <span className="sr-only">Loading</span>
+        </div>
+      );
+    }
+    if (tasks.isError) {
+      return (
+        <div className="rounded-card bg-surface p-6 shadow-card ring-1 ring-line">
+          <p className="mb-4 text-sm text-ink-soft">{tasks.error.message}</p>
+          <Button variant="secondary" onClick={tasks.refetch}>
+            Try again
+          </Button>
+        </div>
+      );
+    }
+    if (view === "board") {
+      return (
+        <TaskBoard workspaceId={workspaceId} project={project} tasks={tasks.data} locked={locked} />
+      );
+    }
+
+    return renderList();
+  };
+
   const doneCount = (tasks.data ?? []).filter((task) => {
     return task.status === "done";
   }).length;
@@ -132,18 +169,48 @@ const ProjectTasks = ({ workspaceId, project }) => {
           disabled={locked}
           className="min-w-64 flex-1"
         />
-        <select
-          aria-label="Show"
-          value={filter}
-          onChange={(event) => {
-            setFilter(event.target.value);
-          }}
-          className="rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+
+        <div
+          role="group"
+          aria-label="View"
+          className="flex rounded-control border border-line bg-surface p-0.5"
         >
-          <option value="open">Open ({total - doneCount})</option>
-          <option value="done">Done ({doneCount})</option>
-          <option value="all">All ({total})</option>
-        </select>
+          {VIEWS.map((option) => {
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={view === option.id}
+                onClick={() => {
+                  changeView(option.id);
+                }}
+                className={cn(
+                  "rounded-control px-3 py-2 text-sm transition-colors",
+                  view === option.id
+                    ? "bg-sunken font-medium text-ink"
+                    : "text-ink-soft hover:text-ink",
+                )}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {view === "list" && (
+          <select
+            aria-label="Show"
+            value={filter}
+            onChange={(event) => {
+              setFilter(event.target.value);
+            }}
+            className="rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <option value="open">Open ({total - doneCount})</option>
+            <option value="done">Done ({doneCount})</option>
+            <option value="all">All ({total})</option>
+          </select>
+        )}
       </div>
 
       {locked && (
@@ -152,7 +219,7 @@ const ProjectTasks = ({ workspaceId, project }) => {
         </p>
       )}
 
-      {renderList()}
+      {renderContent()}
 
       <Modal
         open={Boolean(deleting)}

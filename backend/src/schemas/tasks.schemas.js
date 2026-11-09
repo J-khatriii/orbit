@@ -55,3 +55,9 @@ export const moveTaskSchema = z
     afterTaskId: z.string().regex(UUID_PATTERN, "Invalid task").nullable().optional(),
   })
   .strict();
+
+export const listMyTasksSchema = z.object({
+  view: z.enum(["open", "done", "all"]).default("open"),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(100),
+});

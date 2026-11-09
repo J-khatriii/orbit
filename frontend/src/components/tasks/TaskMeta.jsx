@@ -2,13 +2,14 @@ import { TASK_PRIORITY_LABELS, TASK_PRIORITY_TONES } from "../../features/tasks/
 import { formatDay, isOverdue } from "../../lib/dates.js";
 import { Badge } from "../ui/index.js";
 
-const TaskMeta = ({ task, className = "mt-1" }) => {
+const TaskMeta = ({ task, className = "mt-1", showAssignee = true }) => {
   const done = task.status === "done";
   // isOverdue only knows projects' "completed". A finished task is never overdue.
   const overdue = !done && isOverdue(task.dueDate, task.status);
   const showPriority = task.priority !== "medium";
+  const assignee = showAssignee ? task.assignee : null;
 
-  if (!showPriority && !task.dueDate && !task.assignee) {
+  if (!showPriority && !task.dueDate && !assignee) {
     return null;
   }
 
@@ -27,7 +28,7 @@ const TaskMeta = ({ task, className = "mt-1" }) => {
           {formatDay(task.dueDate)}
         </span>
       )}
-      {task.assignee && <span>{task.assignee.name}</span>}
+      {assignee && <span>{assignee.name}</span>}
     </div>
   );
 };

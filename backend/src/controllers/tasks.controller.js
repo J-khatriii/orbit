@@ -62,3 +62,9 @@ export const deleteTask = async (req, res) => {
 
   res.status(204).end();
 };
+
+export const listMyTasks = async (req, res) => {
+  const result = await taskService.listMyTasks(req.workspace.id, req.user.id, req.validated.query);
+
+  res.json(result);
+};

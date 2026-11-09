@@ -8,6 +8,7 @@ import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { recordActivity } from "./activity.service.js";
 import { toProject, toProjectMember } from "./serializers.js";
+import * as templateService from "./template.service.js";
 
 const COLUMN_NAMES = {
   clientId: "client_id",
@@ -138,12 +139,27 @@ export const createProject = async ({ workspaceId, userId, input }) => {
 
   checkDates(input.startDate, input.dueDate);
 
+  const { templateId, ...fields } = input;
   const row = await db.transaction(async (trx) => {
+    // Throws 404 if the template isn't in this workspace, which undoes everything.
+    const template = templateId
+      ? await templateService.loadTemplate(trx, workspaceId, templateId)
+      : null;
     const created = await projectsRepository.create(trx, {
-      ...toColumns(input),
+      // No description typed? A template's description is the starting point.
+      ...toColumns({ ...fields, description: fields.description ?? template?.description }),
       workspace_id: workspaceId,
       created_by: userId,
     });
+    const tasksAdded = template
+      ? await templateService.addTemplateTasks(trx, {
+          workspaceId,
+          userId,
+          projectId: created.id,
+          startDate: fields.startDate,
+          template,
+        })
+      : 0;
     const project = await projectsRepository.findById(trx, { workspaceId, id: created.id });
 
     await logProjectEvent(trx, {
@@ -151,6 +167,7 @@ export const createProject = async ({ workspaceId, userId, input }) => {
       actorId: userId,
       project,
       action: "project.created",
+      metadata: template ? { templateName: template.name, tasksAdded } : {},
     });
 
     return project;

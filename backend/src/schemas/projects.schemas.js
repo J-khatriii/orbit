@@ -42,7 +42,23 @@ const optionalFields = {
     .transform(blankToNull),
 };
 
-export const createProjectSchema = z.object({ clientId, name, ...optionalFields }).strict();
+export const createProjectSchema = z
+  .object({
+    clientId,
+    name,
+    // Optional: start the project with this template's tasks. "" and null mean none.
+    templateId: z
+      .string()
+      .trim()
+      .refine((value) => {
+        return value === "" || UUID_PATTERN.test(value);
+      }, "Choose a template")
+      .nullable()
+      .optional()
+      .transform(blankToNull),
+    ...optionalFields,
+  })
+  .strict();
 
 // A project's client can't be changed, so clientId isn't accepted here.
 export const updateProjectSchema = z

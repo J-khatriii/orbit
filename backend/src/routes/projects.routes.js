@@ -10,6 +10,7 @@ import {
 import * as projectsController from "../controllers/projects.controller.js";
 import { listActivitySchema } from "../schemas/activity.schemas.js";
 import tasksRoutes from "./tasks.routes.js";
+import { saveAsTemplateSchema } from "../schemas/templates.schemas.js";
 
 // Mounted under /workspaces/:workspaceId/projects. By the time a request gets here,
 // workspaceContext has checked the workspace and role (owner, admin or member).
@@ -35,6 +36,14 @@ router.post(
   "/:projectId/restore",
   requireRole("owner", "admin"),
   projectsController.restoreProject,
+);
+
+// Copies the project's task list into a new template.
+router.post(
+  "/:projectId/save-as-template",
+  requireRole("owner", "admin"),
+  validate(saveAsTemplateSchema),
+  projectsController.saveAsTemplate,
 );
 
 router.post("/:projectId/members", validate(addProjectMemberSchema), projectsController.addMember);

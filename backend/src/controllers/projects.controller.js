@@ -1,5 +1,6 @@
 import * as projectService from "../services/project.service.js";
 import * as activityService from "../services/activity.service.js";
+import * as templateService from "../services/template.service.js";
 
 // req.workspace comes from workspaceContext, req.user from requireAuth.
 export const listProjects = async (req, res) => {
@@ -87,4 +88,15 @@ export const listProjectActivity = async (req, res) => {
   );
 
   res.json(result);
+};
+
+export const saveAsTemplate = async (req, res) => {
+  const template = await templateService.saveProjectAsTemplate({
+    workspaceId: req.workspace.id,
+    userId: req.user.id,
+    projectId: req.params.projectId,
+    input: req.validated.body,
+  });
+
+  res.status(201).json({ template });
 };

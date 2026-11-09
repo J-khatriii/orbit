@@ -3,12 +3,14 @@ import {
   CircleCheck,
   CircleHelp,
   Columns3,
+  ClipboardList,
   Folder,
   LayoutGrid,
   MessagesSquare,
   Receipt,
   Users,
   UsersRound,
+  ListChecks,
 } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import { cn } from "../../lib/cn.js";
@@ -23,10 +25,12 @@ const NAV = [
   { label: "Team", to: "/team", icon: UsersRound, hideFor: ["client"] },
   { label: "Clients", to: "/clients", icon: Users, hideFor: ["client"] },
   { label: "Projects", to: "/projects", icon: Columns3, hideFor: ["client"] },
+  { label: "My tasks", to: "/my-tasks", icon: ListChecks, hideFor: ["client"] },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
   { label: "Files", icon: Folder, phase: 6 },
   { label: "Approvals", icon: CircleCheck, phase: 6 },
   { label: "Invoices", icon: Receipt, phase: 7 },
+  { label: "Templates", to: "/templates", icon: ClipboardList, hideFor: ["client"] },
 ];
 
 const itemBase = "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors";

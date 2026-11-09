@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
+import ClientTabs from "../components/clients/ClientTabs.jsx";
 import ProjectActivity from "../components/projects/ProjectActivity.jsx";
 import ProjectDetails from "../components/projects/ProjectDetails.jsx";
 import ProjectFormModal from "../components/projects/ProjectFormModal.jsx";
 import ProjectTeam from "../components/projects/ProjectTeam.jsx";
+import ProjectTasks from "../components/tasks/ProjectTasks.jsx";
 import { Badge, Button, Card, Spinner, useToast } from "../components/ui/index.js";
 import { useAuth } from "../features/auth/authContext.js";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_TONES } from "../features/projects/constants.js";
@@ -13,6 +15,7 @@ import { useProject } from "../features/projects/useProjects.js";
 
 const ProjectPage = () => {
   const { projectId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { activeWorkspace } = useAuth();
   const toast = useToast();
   const workspaceId = activeWorkspace?.id;
@@ -24,6 +27,10 @@ const ProjectPage = () => {
   const projectQuery = useProject(workspaceId, projectId, canSee);
   const setArchived = useSetProjectArchived();
   const project = projectQuery.data;
+
+  const changeTab = (id) => {
+    setSearchParams(id === "overview" ? {} : { tab: id }, { replace: true });
+  };
 
   const handleToggleArchive = () => {
     const archived = !project.archivedAt;
@@ -75,6 +82,16 @@ const ProjectPage = () => {
     );
   }
 
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "tasks", label: `Tasks (${project.taskCount})` },
+  ];
+  const requestedTab = searchParams.get("tab");
+  const tab =
+    tabs.find((candidate) => {
+      return candidate.id === requestedTab;
+    }) ?? tabs[0];
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <Link
@@ -87,7 +104,7 @@ const ProjectPage = () => {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="font-display text-3xl break-words text-ink">{project.name}</h1>
+          <h1 className="font-display text-3xl wrap-break-word text-ink">{project.name}</h1>
           <p className="mt-1 text-sm text-ink-soft">
             for{" "}
             <Link to={`/clients/${project.clientId}`} className="text-brand-700 hover:underline">
@@ -123,12 +140,22 @@ const ProjectPage = () => {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-6">
-          <ProjectDetails project={project} defaultCurrency={activeWorkspace?.defaultCurrency} />
-          <ProjectTeam workspaceId={workspaceId} project={project} />
-        </div>
-        <ProjectActivity workspaceId={workspaceId} projectId={project.id} />
+      <ClientTabs tabs={tabs} current={tab.id} onChange={changeTab} label="Project sections" />
+
+      <div role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`}>
+        {tab.id === "overview" && (
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="space-y-6">
+              <ProjectDetails
+                project={project}
+                defaultCurrency={activeWorkspace?.defaultCurrency}
+              />
+              <ProjectTeam workspaceId={workspaceId} project={project} />
+            </div>
+            <ProjectActivity workspaceId={workspaceId} projectId={project.id} />
+          </div>
+        )}
+        {tab.id === "tasks" && <ProjectTasks workspaceId={workspaceId} project={project} />}
       </div>
 
       {editing && (

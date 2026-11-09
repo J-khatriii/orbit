@@ -162,3 +162,9 @@ export const listAssignedTo = async (executor, { workspaceId, userId, view, limi
 
   return { rows, total: Number(countRow.count) };
 };
+
+export const createMany = async (executor, rows) => {
+  if (rows.length > 0) {
+    await executor("tasks").insert(rows);
+  }
+};

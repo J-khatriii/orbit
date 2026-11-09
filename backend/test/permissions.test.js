@@ -54,6 +54,7 @@ const readChecks = ({ base, clientId, projectId }) => {
     },
     { label: "workspace activity", method: "get", path: `${base}/activity`, ok: 200 },
     { label: "my tasks", method: "get", path: `${base}/my-tasks`, ok: 200 },
+    { label: "list templates", method: "get", path: `${base}/templates`, ok: 200 },
   ];
 };
 
@@ -123,6 +124,19 @@ const restrictedChecks = ({ base, clientId, projectId, ownerId }) => {
       method: "delete",
       path: `${base}/projects/${projectId}/members/${ownerId}`,
     },
+    {
+      label: "create template",
+      method: "post",
+      path: `${base}/templates`,
+      body: { name: "X" },
+    },
+    {
+      label: "save project as template",
+      method: "post",
+      path: `${base}/projects/${projectId}/save-as-template`,
+      body: { name: "X" },
+    },
+    { label: "delete template", method: "delete", path: `${base}/templates/${MISSING_ID}` },
   ];
 };
 

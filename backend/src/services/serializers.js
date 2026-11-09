@@ -155,3 +155,25 @@ export const toMyTask = (row) => {
     clientName: row.client_name,
   };
 };
+
+export const toTemplate = (row) => {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    taskCount: row.task_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const toTemplateTask = (row) => {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    priority: row.priority,
+    dueOffsetDays: row.due_offset_days,
+    position: row.position,
+  };
+};

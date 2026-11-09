@@ -15,6 +15,7 @@ import * as activityController from "../controllers/activity.controller.js";
 import projectsRoutes from "./projects.routes.js";
 import { listMyTasksSchema } from "../schemas/tasks.schemas.js";
 import * as tasksController from "../controllers/tasks.controller.js";
+import templatesRoutes from "./templates.routes.js";
 
 const router = Router();
 
@@ -112,6 +113,14 @@ router.use(
   workspaceContext,
   requireRole("owner", "admin", "member"),
   projectsRoutes,
+);
+
+// Starter task lists. Internal, like projects.
+router.use(
+  "/:workspaceId/templates",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  templatesRoutes,
 );
 
 export default router;

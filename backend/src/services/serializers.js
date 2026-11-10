@@ -177,3 +177,12 @@ export const toTemplateTask = (row) => {
     position: row.position,
   };
 };
+
+export const toClientAccess = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+    grantedAt: row.granted_at,
+  };
+};

@@ -16,6 +16,7 @@ import projectsRoutes from "./projects.routes.js";
 import { listMyTasksSchema } from "../schemas/tasks.schemas.js";
 import * as tasksController from "../controllers/tasks.controller.js";
 import templatesRoutes from "./templates.routes.js";
+import clientAccessRoutes from "./clientAccess.routes.js";
 
 const router = Router();
 
@@ -81,6 +82,16 @@ router.delete(
   requireRole("owner", "admin"),
   membersController.removeMember,
 );
+
+// Who can open a client's portal: owners and admins only. Mounted before the clients
+// router so this stricter rule applies to these paths.
+router.use(
+  "/:workspaceId/clients/:clientId/access",
+  workspaceContext,
+  requireRole("owner", "admin"),
+  clientAccessRoutes,
+);
+
 // The client list is internal: clients (the role) never see it.
 router.use(
   "/:workspaceId/clients",

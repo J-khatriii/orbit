@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-// Copy the helper import from templates.test.js, for example:
 import { addMemberTo, createWorkspace } from "./helpers.js";
 
-// If your tests don't use an /api prefix, remove it here.
+const WS = "/api/v1/workspaces";
+
 const base = (workspaceId) => {
-  return `/api/workspaces/${workspaceId}`;
+  return `${WS}/${workspaceId}`;
 };
 
-// If `owner` has no `.agent` in your helpers, use whatever templates.test.js uses.
 const makeClient = async (owner, workspaceId) => {
   const res = await owner.agent
     .post(`${base(workspaceId)}/clients`)

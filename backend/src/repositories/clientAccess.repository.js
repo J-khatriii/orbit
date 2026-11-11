@@ -7,18 +7,18 @@ export const findClient = async (executor, { workspaceId, clientId }) => {
 };
 
 export const findMember = async (executor, { workspaceId, userId }) => {
-  return executor("workspace_members")
-    .join("users", "users.id", "workspace_members.user_id")
+  return executor("memberships")
+    .join("users", "users.id", "memberships.user_id")
     .where({
-      "workspace_members.workspace_id": workspaceId,
-      "workspace_members.user_id": userId,
+      "memberships.workspace_id": workspaceId,
+      "memberships.user_id": userId,
     })
     .first([
       "users.id as id",
       "users.name as name",
       "users.email as email",
-      "workspace_members.role as role",
-      "workspace_members.status as status",
+      "memberships.role as role",
+      "memberships.status as status",
     ]);
 };
 

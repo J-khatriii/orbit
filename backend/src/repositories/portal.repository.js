@@ -49,3 +49,19 @@ export const listTasks = async (executor, { workspaceId, projectId }) => {
     .orderBy([{ column: "position" }, { column: "id" }])
     .select(["id", "title", "description", "status", "due_date", "completed_at"]);
 };
+
+export const listClients = async (executor, { workspaceId, clientIds }) => {
+  return executor("clients")
+    .where("workspace_id", workspaceId)
+    .whereIn("id", clientIds)
+    .whereNull("archived_at")
+    .orderBy([{ column: "company_name" }, { column: "id" }])
+    .select(["id", "company_name"]);
+};
+
+export const findClient = async (executor, { workspaceId, clientId }) => {
+  return executor("clients")
+    .where({ workspace_id: workspaceId, id: clientId })
+    .whereNull("archived_at")
+    .first(["id"]);
+};

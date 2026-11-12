@@ -18,7 +18,12 @@ const loadClient = async (executor, workspaceId, clientId) => {
 
 export const listMessages = async ({ workspaceId, clientId, query }) => {
   const client = await loadClient(db, workspaceId, clientId);
-  const filters = { workspaceId, clientId: client.id, projectId: query.projectId };
+  const filters = {
+    workspaceId,
+    clientId: client.id,
+    projectId: query.projectId,
+    includeInternal: true,
+  };
   const [rows, total] = await Promise.all([
     messagesRepository.list(db, {
       ...filters,

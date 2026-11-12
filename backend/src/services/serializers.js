@@ -231,3 +231,22 @@ export const toPortalTask = (row) => {
     completedAt: row.completed_at,
   };
 };
+
+export const toPortalClient = (row) => {
+  return {
+    id: row.id,
+    name: row.company_name,
+  };
+};
+
+// What a client sees of a message: no ids of other people, no internal flag.
+export const toPortalMessage = (row, userId) => {
+  return {
+    id: row.id,
+    body: row.body,
+    projectName: row.project_name,
+    authorName: row.author_name,
+    mine: row.author_id === userId,
+    createdAt: row.created_at,
+  };
+};

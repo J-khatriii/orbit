@@ -17,7 +17,7 @@ const withJoins = (executor) => {
     .leftJoin("projects", "projects.id", "messages.project_id");
 };
 
-const filtered = (executor, { workspaceId, clientId, projectId }) => {
+const filtered = (executor, { workspaceId, clientId, projectId, includeInternal }) => {
   const query = withJoins(executor).where({
     "messages.workspace_id": workspaceId,
     "messages.client_id": clientId,
@@ -25,6 +25,10 @@ const filtered = (executor, { workspaceId, clientId, projectId }) => {
 
   if (projectId) {
     query.where("messages.project_id", projectId);
+  }
+  // Internal notes are for the team. Only the team's own routes ask for them.
+  if (!includeInternal) {
+    query.where("messages.internal", false);
   }
 
   return query;

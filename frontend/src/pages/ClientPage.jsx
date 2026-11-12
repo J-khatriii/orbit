@@ -13,11 +13,12 @@ import { useClient } from "../features/clients/useClients.js";
 import ClientContacts from "../components/clients/ClientContacts.jsx";
 import ClientProjects from "../components/clients/ClientProjects.jsx";
 import ClientPortalAccess from "../components/clients/ClientPortalAccess.jsx";
+import ClientMessages from "../components/clients/ClientMessages.jsx";
 
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "projects", label: "Projects" },
-  { id: "messages", label: "Messages", note: "Conversations with this client arrive in Phase 5." },
+  { id: "messages", label: "Messages" },
   { id: "files", label: "Files", note: "Shared files arrive in Phase 6." },
   { id: "invoices", label: "Invoices", note: "Invoices and payments arrive in Phase 7." },
 ];
@@ -176,6 +177,13 @@ const ClientPage = () => {
           </div>
         )}
         {tab.id === "projects" && <ClientProjects workspaceId={workspaceId} client={client} />}
+        {tab.id === "messages" && (
+          <ClientMessages
+            workspaceId={workspaceId}
+            clientId={client.id}
+            clientName={client.companyName}
+          />
+        )}
         {tab.note && (
           <Card title={tab.label}>
             <p className="text-sm text-ink-soft">{tab.note}</p>

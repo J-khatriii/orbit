@@ -74,6 +74,12 @@ export const describeActivity = (event) => {
     case "contact.deleted": {
       return `removed the contact ${metadata.name}`;
     }
+    case "client.access_granted": {
+      return `gave ${metadata.userName ?? "someone"} access to the portal for ${metadata.name}`;
+    }
+    case "client.access_revoked": {
+      return `removed ${metadata.userName ?? "someone"}'s access to the portal for ${metadata.name}`;
+    }
     case "project.created": {
       const template = metadata.templateName;
 

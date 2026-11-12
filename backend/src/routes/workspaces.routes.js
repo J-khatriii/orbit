@@ -17,6 +17,7 @@ import { listMyTasksSchema } from "../schemas/tasks.schemas.js";
 import * as tasksController from "../controllers/tasks.controller.js";
 import templatesRoutes from "./templates.routes.js";
 import clientAccessRoutes from "./clientAccess.routes.js";
+import messagesRoutes from "./messages.routes.js";
 
 const router = Router();
 
@@ -90,6 +91,14 @@ router.use(
   workspaceContext,
   requireRole("owner", "admin"),
   clientAccessRoutes,
+);
+
+// A client's conversation. Team only: clients (the role) use the portal instead.
+router.use(
+  "/:workspaceId/clients/:clientId/messages",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  messagesRoutes,
 );
 
 // The client list is internal: clients (the role) never see it.

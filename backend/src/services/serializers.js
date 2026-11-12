@@ -194,3 +194,15 @@ export const toClientCandidate = (row) => {
     email: row.email,
   };
 };
+
+export const toMessage = (row) => {
+  return {
+    id: row.id,
+    body: row.body,
+    internal: row.internal,
+    projectId: row.project_id,
+    projectName: row.project_name,
+    author: row.author_id ? { id: row.author_id, name: row.author_name } : null,
+    createdAt: row.created_at,
+  };
+};

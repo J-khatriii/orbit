@@ -9,7 +9,7 @@ const TaskMeta = ({ task, className = "mt-1", showAssignee = true }) => {
   const showPriority = task.priority !== "medium";
   const assignee = showAssignee ? task.assignee : null;
 
-  if (!showPriority && !task.dueDate && !assignee) {
+  if (!showPriority && !task.dueDate && !assignee && !task.clientVisible) {
     return null;
   }
 
@@ -29,6 +29,7 @@ const TaskMeta = ({ task, className = "mt-1", showAssignee = true }) => {
         </span>
       )}
       {assignee && <span>{assignee.name}</span>}
+      {task.clientVisible && <Badge tone="sage">Shared with client</Badge>}
     </div>
   );
 };

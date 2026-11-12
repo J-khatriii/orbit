@@ -212,6 +212,29 @@ const TaskDrawer = ({ workspaceId, project, task, locked, onClose }) => {
           <FieldError message={form.errors.description} />
         </div>
 
+        <div>
+          <label htmlFor="task-client-visible" className="flex items-start gap-3">
+            <input
+              id="task-client-visible"
+              type="checkbox"
+              disabled={locked}
+              checked={form.values.clientVisible}
+              onChange={(event) => {
+                form.setValue("clientVisible", event.target.checked);
+              }}
+              className="mt-0.5 size-4"
+            />
+            <span>
+              <span className="block text-sm font-medium text-ink">Visible to client</span>
+              <span className="block text-xs text-ink-muted">
+                Clients can see this task&apos;s title, description, status and due date in their
+                portal. Keep internal notes out of the description.
+              </span>
+            </span>
+          </label>
+          <FieldError message={form.errors.clientVisible} />
+        </div>
+
         {/* Lets Enter in the title box submit the form. The visible buttons are in the footer. */}
         <button type="submit" className="hidden" tabIndex={-1} aria-hidden="true" />
       </form>

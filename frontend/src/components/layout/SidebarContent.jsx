@@ -5,6 +5,7 @@ import {
   Columns3,
   ClipboardList,
   Folder,
+  FolderOpen,
   LayoutGrid,
   MessagesSquare,
   Receipt,
@@ -31,6 +32,12 @@ const NAV = [
   { label: "Approvals", icon: CircleCheck, phase: 6 },
   { label: "Invoices", icon: Receipt, phase: 7 },
   { label: "Templates", to: "/templates", icon: ClipboardList, hideFor: ["client"] },
+  {
+    label: "My projects",
+    to: "/portal",
+    icon: FolderOpen,
+    hideFor: ["owner", "admin", "member"],
+  },
 ];
 
 const itemBase = "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors";

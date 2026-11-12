@@ -23,6 +23,7 @@ import MyTasksPage from "../pages/MyTasksPage.jsx";
 import TemplatesPage from "../pages/TemplatesPage.jsx";
 import PortalPage from "../pages/PortalPage.jsx";
 import PortalProjectPage from "../pages/PortalProjectPage.jsx";
+import PortalMessagesPage from "../pages/PortalMessagesPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -90,6 +91,11 @@ export const router = createBrowserRouter([
                 path: "portal/projects/:projectId",
                 element: <PortalProjectPage />,
                 handle: { title: "Project" },
+              },
+              {
+                path: "portal/messages",
+                element: <PortalMessagesPage />,
+                handle: { title: "Messages" },
               },
             ],
           },

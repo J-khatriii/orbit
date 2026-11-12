@@ -7,6 +7,7 @@ import {
   Folder,
   FolderOpen,
   LayoutGrid,
+  MessageSquare,
   MessagesSquare,
   Receipt,
   Users,
@@ -36,6 +37,12 @@ const NAV = [
     label: "My projects",
     to: "/portal",
     icon: FolderOpen,
+    hideFor: ["owner", "admin", "member"],
+  },
+  {
+    label: "Messages",
+    to: "/portal/messages",
+    icon: MessageSquare,
     hideFor: ["owner", "admin", "member"],
   },
 ];

@@ -12,6 +12,7 @@ import { useSetClientArchived } from "../features/clients/useClientMutations.js"
 import { useClient } from "../features/clients/useClients.js";
 import ClientContacts from "../components/clients/ClientContacts.jsx";
 import ClientProjects from "../components/clients/ClientProjects.jsx";
+import ClientPortalAccess from "../components/clients/ClientPortalAccess.jsx";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -162,6 +163,13 @@ const ClientPage = () => {
                 clientId={client.id}
                 clientName={client.companyName}
               />
+              {canArchive && (
+                <ClientPortalAccess
+                  workspaceId={workspaceId}
+                  clientId={client.id}
+                  clientName={client.companyName}
+                />
+              )}
               <ClientDetails client={client} defaultCurrency={activeWorkspace?.defaultCurrency} />
             </div>
             <ClientActivity workspaceId={workspaceId} clientId={client.id} />

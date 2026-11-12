@@ -186,3 +186,11 @@ export const toClientAccess = (row) => {
     grantedAt: row.granted_at,
   };
 };
+
+export const toClientCandidate = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+  };
+};

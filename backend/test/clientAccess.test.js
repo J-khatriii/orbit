@@ -151,4 +151,21 @@ describe("client portal access", () => {
     expect(second.body.error.code).toBe("ACCESS_NOT_FOUND");
     expect(list.body.people).toHaveLength(0);
   });
+
+  it("lists client users who can still be given access", async () => {
+    const { owner, workspaceId } = await createWorkspace("Candidates");
+    const clientId = await makeClient(owner, workspaceId);
+    const given = await addMemberTo(workspaceId, "client");
+    const waiting = await addMemberTo(workspaceId, "client");
+
+    await addMemberTo(workspaceId, "member");
+    await grant(owner.agent, workspaceId, clientId, given.res.body.user.id);
+
+    const url = `${base(workspaceId)}/clients/${clientId}/access/candidates`;
+    const res = await owner.agent.get(url);
+
+    expect(res.status).toBe(200);
+    expect(res.body.people).toHaveLength(1);
+    expect(res.body.people[0].userId).toBe(waiting.res.body.user.id);
+  });
 });

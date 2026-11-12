@@ -6,6 +6,12 @@ export const listAccess = async (req, res) => {
   res.json(result);
 };
 
+export const listCandidates = async (req, res) => {
+  const result = await accessService.listCandidates(req.workspace.id, req.params.clientId);
+
+  res.json(result);
+};
+
 export const grantAccess = async (req, res) => {
   const result = await accessService.grantAccess({
     workspaceId: req.workspace.id,

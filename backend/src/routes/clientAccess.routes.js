@@ -8,6 +8,7 @@ import * as accessController from "../controllers/clientAccess.controller.js";
 const router = Router({ mergeParams: true });
 
 router.get("/", accessController.listAccess);
+router.get("/candidates", accessController.listCandidates);
 router.post("/", validate(grantAccessSchema), accessController.grantAccess);
 router.delete("/:userId", accessController.revokeAccess);
 

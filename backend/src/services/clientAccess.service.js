@@ -3,7 +3,7 @@ import * as accessRepository from "../repositories/clientAccess.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { recordActivity } from "./activity.service.js";
-import { toClientAccess } from "./serializers.js";
+import { toClientAccess, toClientCandidate } from "./serializers.js";
 
 const isAccessClash = (error) => {
   return error.code === "23505" && error.constraint === "client_access_unique";
@@ -28,6 +28,17 @@ export const listAccess = async (workspaceId, clientId) => {
   return {
     people: rows.map((row) => {
       return toClientAccess(row);
+    }),
+  };
+};
+
+export const listCandidates = async (workspaceId, clientId) => {
+  const client = await loadClient(db, workspaceId, clientId);
+  const rows = await accessRepository.listCandidates(db, { workspaceId, clientId: client.id });
+
+  return {
+    people: rows.map((row) => {
+      return toClientCandidate(row);
     }),
   };
 };

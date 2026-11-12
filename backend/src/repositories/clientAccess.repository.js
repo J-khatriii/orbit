@@ -57,3 +57,22 @@ export const listClientIdsForUser = async (executor, { workspaceId, userId }) =>
     return row.client_id;
   });
 };
+
+// Active client-role members of the workspace who don't have access to this client yet.
+export const listCandidates = async (executor, { workspaceId, clientId }) => {
+  return executor("memberships")
+    .join("users", "users.id", "memberships.user_id")
+    .where({
+      "memberships.workspace_id": workspaceId,
+      "memberships.role": "client",
+      "memberships.status": "active",
+    })
+    .whereNotExists(
+      executor("client_access")
+        .select(executor.raw("1"))
+        .where("client_access.client_id", clientId)
+        .whereRaw("client_access.user_id = memberships.user_id"),
+    )
+    .orderBy([{ column: "users.name" }, { column: "users.id" }])
+    .select(["users.id as user_id", "users.name as name", "users.email as email"]);
+};

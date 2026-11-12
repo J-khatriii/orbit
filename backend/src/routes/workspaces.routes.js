@@ -18,6 +18,7 @@ import * as tasksController from "../controllers/tasks.controller.js";
 import templatesRoutes from "./templates.routes.js";
 import clientAccessRoutes from "./clientAccess.routes.js";
 import messagesRoutes from "./messages.routes.js";
+import portalRoutes from "./portal.routes.js";
 
 const router = Router();
 
@@ -142,5 +143,8 @@ router.use(
   requireRole("owner", "admin", "member"),
   templatesRoutes,
 );
+
+// The client portal. Clients only: the team uses the routes above.
+router.use("/:workspaceId/portal", workspaceContext, requireRole("client"), portalRoutes);
 
 export default router;

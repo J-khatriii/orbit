@@ -206,3 +206,28 @@ export const toMessage = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toPortalProject = (row) => {
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    startDate: row.start_date,
+    dueDate: row.due_date,
+    taskCount: row.task_count,
+    tasksDone: row.tasks_done,
+  };
+};
+
+export const toPortalTask = (row) => {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    dueDate: row.due_date,
+    completedAt: row.completed_at,
+  };
+};

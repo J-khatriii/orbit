@@ -178,4 +178,20 @@ describe("client portal", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it("shows a task once the team marks it visible through the tasks API", async () => {
+    const { owner, workspaceId, projectA, person } = await setup();
+    const tasksUrl = `${base(workspaceId)}/projects/${projectA}/tasks`;
+
+    await owner.agent.post(tasksUrl).send({ title: "Share me", clientVisible: true });
+    await owner.agent.post(tasksUrl).send({ title: "Keep private" });
+
+    const res = await person.agent.get(`${base(workspaceId)}/portal/projects/${projectA}`);
+
+    expect(
+      res.body.tasks.map((task) => {
+        return task.title;
+      }),
+    ).toEqual(["Share me"]);
+  });
 });

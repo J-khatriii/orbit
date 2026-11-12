@@ -250,3 +250,13 @@ export const toPortalMessage = (row, userId) => {
     createdAt: row.created_at,
   };
 };
+
+export const toReview = (row) => {
+  return {
+    id: row.id,
+    decision: row.decision,
+    comment: row.comment,
+    reviewerName: row.reviewer_name,
+    createdAt: row.created_at,
+  };
+};

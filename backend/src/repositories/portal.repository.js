@@ -63,5 +63,5 @@ export const findClient = async (executor, { workspaceId, clientId }) => {
   return executor("clients")
     .where({ workspace_id: workspaceId, id: clientId })
     .whereNull("archived_at")
-    .first(["id"]);
+    .first(["id", "company_name"]);
 };

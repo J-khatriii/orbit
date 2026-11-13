@@ -2,6 +2,7 @@ import { db } from "../db/knex.js";
 import * as messagesRepository from "../repositories/messages.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
+import { notifyTeamMessage } from "./notification.service.js";
 import { toMessage } from "./serializers.js";
 
 const loadClient = async (executor, workspaceId, clientId) => {
@@ -60,15 +61,29 @@ export const createMessage = async ({ workspaceId, authorId, clientId, input }) 
     }
   }
 
-  const created = await messagesRepository.insert(db, {
-    workspace_id: workspaceId,
-    client_id: client.id,
-    project_id: input.projectId ?? null,
-    author_id: authorId,
-    body: input.body,
-    internal: input.internal,
+  const row = await db.transaction(async (trx) => {
+    const created = await messagesRepository.insert(trx, {
+      workspace_id: workspaceId,
+      client_id: client.id,
+      project_id: input.projectId ?? null,
+      author_id: authorId,
+      body: input.body,
+      internal: input.internal,
+    });
+    const saved = await messagesRepository.findById(trx, { workspaceId, id: created.id });
+
+    // Internal notes are for the team, so the client is never told about them.
+    if (!input.internal) {
+      await notifyTeamMessage(trx, {
+        workspaceId,
+        authorId,
+        authorName: saved.author_name,
+        client,
+      });
+    }
+
+    return saved;
   });
-  const row = await messagesRepository.findById(db, { workspaceId, id: created.id });
 
   return { message: toMessage(row) };
 };

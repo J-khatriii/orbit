@@ -7,6 +7,7 @@ import { GAP, positionAfter } from "../utils/ordering.js";
 import { recordActivity } from "./activity.service.js";
 import { loadProject } from "./project.service.js";
 import { toMyTask, toTask } from "./serializers.js";
+import { notifyReviewRequested } from "./notification.service.js";
 
 const COLUMN_NAMES = {
   title: "title",
@@ -171,6 +172,8 @@ export const createTask = async ({ workspaceId, userId, projectId, input }) => {
       action: "task.created",
     });
 
+    await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
+
     return created.id;
   });
 
@@ -229,6 +232,10 @@ export const updateTask = async ({ workspaceId, userId, projectId, taskId, input
         action: "task.updated",
         metadata,
       });
+
+      if (fields.includes("status") || fields.includes("clientVisible")) {
+        await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
+      }
     }
   });
 
@@ -280,6 +287,8 @@ export const placeTask = async (
       action: "task.updated",
       metadata: { fields: ["status"], status: { from: before.status, to: task.status } },
     });
+
+    await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
   }
 };
 

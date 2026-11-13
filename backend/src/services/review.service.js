@@ -7,6 +7,7 @@ import { listAccessibleClientIds } from "./clientAccess.service.js";
 import { loadProject } from "./project.service.js";
 import { toPortalTask, toReview } from "./serializers.js";
 import { ensureEditable, loadTask, placeTask } from "./task.service.js";
+import { notifyReviewDecided } from "./notification.service.js";
 
 // Where a task goes when the client decides.
 const NEXT_STATUS = {
@@ -61,6 +62,13 @@ export const reviewTask = async ({ workspaceId, userId, taskId, input }) => {
       reviewer_id: userId,
       decision: input.decision,
       comment,
+    });
+    await notifyReviewDecided(trx, {
+      workspaceId,
+      actorId: userId,
+      project,
+      task: before,
+      decision: input.decision,
     });
   });
 

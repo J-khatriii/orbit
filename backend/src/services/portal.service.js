@@ -1,10 +1,11 @@
 import { db } from "../db/knex.js";
+import * as messagesRepository from "../repositories/messages.repository.js";
 import * as portalRepository from "../repositories/portal.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { listAccessibleClientIds } from "./clientAccess.service.js";
+import { notifyClientMessage } from "./notification.service.js";
 import { toPortalClient, toPortalMessage, toPortalProject, toPortalTask } from "./serializers.js";
-import * as messagesRepository from "../repositories/messages.repository.js";
 
 export const listProjects = async ({ workspaceId, userId }) => {
   const clientIds = await listAccessibleClientIds(workspaceId, userId);
@@ -56,6 +57,8 @@ const requireClientAccess = async (workspaceId, userId, clientId) => {
   if (!client) {
     throw new AppError(404, "CLIENT_NOT_FOUND", "Client not found");
   }
+
+  return client;
 };
 
 export const listClients = async ({ workspaceId, userId }) => {
@@ -99,17 +102,28 @@ export const listClientMessages = async ({ workspaceId, userId, clientId, query 
 };
 
 export const createClientMessage = async ({ workspaceId, userId, clientId, input }) => {
-  await requireClientAccess(workspaceId, userId, clientId);
+  const client = await requireClientAccess(workspaceId, userId, clientId);
 
-  const created = await messagesRepository.insert(db, {
-    workspace_id: workspaceId,
-    client_id: clientId,
-    project_id: null,
-    author_id: userId,
-    body: input.body,
-    internal: false,
+  const row = await db.transaction(async (trx) => {
+    const created = await messagesRepository.insert(trx, {
+      workspace_id: workspaceId,
+      client_id: clientId,
+      project_id: null,
+      author_id: userId,
+      body: input.body,
+      internal: false,
+    });
+    const saved = await messagesRepository.findById(trx, { workspaceId, id: created.id });
+
+    await notifyClientMessage(trx, {
+      workspaceId,
+      authorId: userId,
+      authorName: saved.author_name,
+      client,
+    });
+
+    return saved;
   });
-  const row = await messagesRepository.findById(db, { workspaceId, id: created.id });
 
   return { message: toPortalMessage(row, userId) };
 };

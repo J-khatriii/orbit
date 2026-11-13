@@ -35,7 +35,9 @@ const filtered = (executor, { workspaceId, clientId, projectId, includeInternal 
 };
 
 export const findClient = async (executor, { workspaceId, clientId }) => {
-  return executor("clients").where({ workspace_id: workspaceId, id: clientId }).first(["id"]);
+  return executor("clients")
+    .where({ workspace_id: workspaceId, id: clientId })
+    .first(["id", "company_name"]);
 };
 
 export const findProject = async (executor, { workspaceId, projectId }) => {

@@ -8,6 +8,7 @@ const TaskMeta = ({ task, className = "mt-1", showAssignee = true }) => {
   const overdue = !done && isOverdue(task.dueDate, task.status);
   const showPriority = task.priority !== "medium";
   const assignee = showAssignee ? task.assignee : null;
+  const waiting = task.clientVisible && task.status === "in_review";
 
   if (!showPriority && !task.dueDate && !assignee && !task.clientVisible) {
     return null;
@@ -29,7 +30,11 @@ const TaskMeta = ({ task, className = "mt-1", showAssignee = true }) => {
         </span>
       )}
       {assignee && <span>{assignee.name}</span>}
-      {task.clientVisible && <Badge tone="sage">Shared with client</Badge>}
+      {task.clientVisible && (
+        <Badge tone={waiting ? "brand" : "sage"}>
+          {waiting ? "Waiting on client" : "Shared with client"}
+        </Badge>
+      )}
     </div>
   );
 };

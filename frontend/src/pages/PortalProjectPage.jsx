@@ -7,8 +7,9 @@ import { formatDate } from "../features/portal/format.js";
 import { usePortalProject } from "../features/portal/usePortal.js";
 import { PROJECT_STATUS_LABELS } from "../features/projects/constants.js";
 import { TASK_STATUS_LABELS } from "../features/tasks/constants.js";
+import PortalTaskReview from "../components/portal/PortalTaskReview.jsx";
 
-const STATUS_ORDER = ["todo", "in_progress", "in_review", "done"];
+const STATUS_ORDER = ["in_review", "todo", "in_progress", "done"];
 
 const PortalProjectPage = () => {
   const { projectId } = useParams();
@@ -118,6 +119,9 @@ const PortalProjectPage = () => {
                     )}
                     {task.dueDate && (
                       <p className="mt-1 text-xs text-ink-muted">Due {formatDate(task.dueDate)}</p>
+                    )}
+                    {task.status === "in_review" && (
+                      <PortalTaskReview workspaceId={workspaceId} taskId={task.id} />
                     )}
                   </li>
                 );

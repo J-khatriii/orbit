@@ -11,6 +11,7 @@ import {
 } from "../../features/tasks/taskForm.js";
 import { useDeleteTask, useUpdateTask } from "../../features/tasks/useTaskMutations.js";
 import { timeAgo } from "../../lib/timeAgo.js";
+import TaskReviews from "./TaskReviews.jsx";
 
 const controlClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2.5 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60";
@@ -233,6 +234,8 @@ const TaskDrawer = ({ workspaceId, project, task, locked, onClose }) => {
             </span>
           </label>
           <FieldError message={form.errors.clientVisible} />
+
+          <TaskReviews workspaceId={workspaceId} projectId={project.id} taskId={task.id} />
         </div>
 
         {/* Lets Enter in the title box submit the form. The visible buttons are in the footer. */}

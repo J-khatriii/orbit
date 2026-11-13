@@ -23,4 +23,7 @@ export const portalApi = {
   sendMessage: ({ workspaceId, clientId, input }) => {
     return api.post(`${portalUrl(workspaceId)}/clients/${clientId}/messages`, input);
   },
+  review: ({ workspaceId, taskId, input }) => {
+    return api.post(`${portalUrl(workspaceId)}/tasks/${taskId}/review`, input);
+  },
 };

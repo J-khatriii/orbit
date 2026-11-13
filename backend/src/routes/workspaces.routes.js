@@ -19,6 +19,7 @@ import templatesRoutes from "./templates.routes.js";
 import clientAccessRoutes from "./clientAccess.routes.js";
 import messagesRoutes from "./messages.routes.js";
 import portalRoutes from "./portal.routes.js";
+import notificationsRoutes from "./notifications.routes.js";
 
 const router = Router();
 
@@ -146,5 +147,8 @@ router.use(
 
 // The client portal. Clients only: the team uses the routes above.
 router.use("/:workspaceId/portal", workspaceContext, requireRole("client"), portalRoutes);
+
+// A person's own notifications. Every role, clients included.
+router.use("/:workspaceId/notifications", workspaceContext, notificationsRoutes);
 
 export default router;

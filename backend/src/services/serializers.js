@@ -260,3 +260,16 @@ export const toReview = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toNotification = (row) => {
+  return {
+    id: row.id,
+    kind: row.kind,
+    clientId: row.client_id,
+    projectId: row.project_id,
+    taskId: row.task_id,
+    data: row.data,
+    read: row.read_at !== null,
+    createdAt: row.created_at,
+  };
+};

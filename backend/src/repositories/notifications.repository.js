@@ -103,3 +103,46 @@ export const findUserName = async (executor, userId) => {
 
   return row?.name ?? null;
 };
+
+// Of these people, who has NO unread notification of this kind about the same client (or the
+// same task, for reviews)? Those are the ones worth an email.
+export const filterWithoutUnread = async (
+  executor,
+  { workspaceId, userIds, kind, clientId, taskId },
+) => {
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const query = executor("notifications")
+    .where({ workspace_id: workspaceId, kind })
+    .whereIn("user_id", userIds)
+    .whereNull("read_at");
+
+  if (taskId) {
+    query.where("task_id", taskId);
+  } else {
+    query.where("client_id", clientId);
+  }
+
+  const rows = await query.distinct("user_id");
+  const holders = new Set(
+    rows.map((row) => {
+      return row.user_id;
+    }),
+  );
+
+  return userIds.filter((userId) => {
+    return !holders.has(userId);
+  });
+};
+
+export const listUsers = async (executor, userIds) => {
+  return executor("users").whereIn("id", userIds).select(["id", "name", "email"]);
+};
+
+export const findWorkspaceName = async (executor, workspaceId) => {
+  const row = await executor("workspaces").where({ id: workspaceId }).first(["name"]);
+
+  return row?.name ?? "your team";
+};

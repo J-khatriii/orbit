@@ -273,3 +273,17 @@ export const toNotification = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toFile = (row) => {
+  return {
+    id: row.id,
+    name: row.name,
+    contentType: row.content_type,
+    size: row.size_bytes,
+    clientVisible: row.client_visible,
+    projectId: row.project_id,
+    projectName: row.project_name,
+    uploadedBy: row.uploaded_by ? { id: row.uploaded_by, name: row.uploader_name } : null,
+    createdAt: row.created_at,
+  };
+};

@@ -20,6 +20,7 @@ import clientAccessRoutes from "./clientAccess.routes.js";
 import messagesRoutes from "./messages.routes.js";
 import portalRoutes from "./portal.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
+import filesRoutes from "./files.routes.js";
 
 const router = Router();
 
@@ -101,6 +102,14 @@ router.use(
   workspaceContext,
   requireRole("owner", "admin", "member"),
   messagesRoutes,
+);
+
+// A client's files. Team only: clients (the role) get theirs through the portal.
+router.use(
+  "/:workspaceId/clients/:clientId/files",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  filesRoutes,
 );
 
 // The client list is internal: clients (the role) never see it.

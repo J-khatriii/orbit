@@ -7,6 +7,7 @@ import {
   updateTaskSchema,
 } from "../schemas/tasks.schemas.js";
 import * as tasksController from "../controllers/tasks.controller.js";
+import * as reviewsController from "../controllers/reviews.controller.js";
 
 // Mounted under /workspaces/:workspaceId/projects/:projectId/tasks. The projects mount has
 // already checked the workspace and the role. mergeParams lets us read :projectId.
@@ -15,6 +16,7 @@ const router = Router({ mergeParams: true });
 router.get("/", validate(listTasksSchema, "query"), tasksController.listTasks);
 router.post("/", validate(createTaskSchema), tasksController.createTask);
 router.get("/:taskId", tasksController.getTask);
+router.get("/:taskId/reviews", reviewsController.listTaskReviews);
 router.patch("/:taskId", validate(updateTaskSchema), tasksController.updateTask);
 router.post("/:taskId/move", validate(moveTaskSchema), tasksController.moveTask);
 router.delete("/:taskId", tasksController.deleteTask);

@@ -2,9 +2,9 @@ import { createBrowserRouter } from "react-router";
 import PublicOnly from "../components/auth/PublicOnly.jsx";
 import RequireAuth from "../components/auth/RequireAuth.jsx";
 import RequireOnboarded from "../components/auth/RequireOnboarded.jsx";
+import RoleHome from "../components/auth/RoleHome.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import AuthLayout from "../components/layout/AuthLayout.jsx";
-import DashboardPage from "../pages/DashboardPage.jsx";
 import DesignSystemPage from "../pages/DesignSystemPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import WelcomePage from "../pages/WelcomePage.jsx";
@@ -21,6 +21,10 @@ import ProjectsPage from "../pages/ProjectsPage.jsx";
 import ProjectPage from "../pages/ProjectPage.jsx";
 import MyTasksPage from "../pages/MyTasksPage.jsx";
 import TemplatesPage from "../pages/TemplatesPage.jsx";
+import PortalPage from "../pages/PortalPage.jsx";
+import PortalProjectPage from "../pages/PortalProjectPage.jsx";
+import PortalMessagesPage from "../pages/PortalMessagesPage.jsx";
+import NotificationsPage from "../pages/NotificationsPage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -61,7 +65,7 @@ export const router = createBrowserRouter([
           {
             element: <AppLayout />,
             children: [
-              { index: true, element: <DashboardPage />, handle: { title: "Overview" } },
+              { index: true, element: <RoleHome />, handle: { title: "Overview" } },
               { path: "team", element: <TeamPage />, handle: { title: "Team" } },
               ...(import.meta.env.DEV
                 ? [
@@ -83,6 +87,22 @@ export const router = createBrowserRouter([
               },
               { path: "my-tasks", element: <MyTasksPage />, handle: { title: "My tasks" } },
               { path: "templates", element: <TemplatesPage />, handle: { title: "Templates" } },
+              { path: "portal", element: <PortalPage />, handle: { title: "My projects" } },
+              {
+                path: "portal/projects/:projectId",
+                element: <PortalProjectPage />,
+                handle: { title: "Project" },
+              },
+              {
+                path: "portal/messages",
+                element: <PortalMessagesPage />,
+                handle: { title: "Messages" },
+              },
+              {
+                path: "notifications",
+                element: <NotificationsPage />,
+                handle: { title: "Notifications" },
+              },
             ],
           },
         ],

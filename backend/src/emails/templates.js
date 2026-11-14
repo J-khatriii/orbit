@@ -76,3 +76,29 @@ export const invitationEmail = ({ inviterName, workspaceName, role, url }) => {
     }),
   };
 };
+
+export const newMessageEmail = ({ name, actorName, workspaceName, url }) => {
+  return {
+    subject: `${actorName} sent you a message on Orbit`,
+    ...layout({
+      heading: "You have a new message",
+      intro: `Hi ${name}, ${actorName} at ${workspaceName} sent you a message. Open your portal to read and reply.`,
+      buttonLabel: "Open messages",
+      url,
+      outro: `You're receiving this because you have access to ${workspaceName} on Orbit. We send one email until you've read your new messages.`,
+    }),
+  };
+};
+
+export const reviewRequestedEmail = ({ name, taskTitle, projectName, workspaceName, url }) => {
+  return {
+    subject: `Your review is needed: ${taskTitle}`,
+    ...layout({
+      heading: "Your review is needed",
+      intro: `Hi ${name}, ${workspaceName} is waiting for your review of "${taskTitle}" in ${projectName}.`,
+      buttonLabel: "Review now",
+      url,
+      outro: `You're receiving this because you have access to ${workspaceName} on Orbit.`,
+    }),
+  };
+};

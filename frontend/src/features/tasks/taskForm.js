@@ -1,4 +1,5 @@
-const FIELDS = ["title", "status", "priority", "assigneeId", "dueDate", "description"];
+const TEXT_FIELDS = ["title", "status", "priority", "assigneeId", "dueDate", "description"];
+const FIELDS = [...TEXT_FIELDS, "clientVisible"];
 
 // Form values for a task. Empty boxes are "" because inputs can't hold null.
 export const valuesOf = (task) => {
@@ -9,11 +10,16 @@ export const valuesOf = (task) => {
     assigneeId: task.assigneeId ?? "",
     dueDate: task.dueDate ?? "",
     description: task.description ?? "",
+    clientVisible: task.clientVisible ?? false,
   };
 };
 
 export const changedFields = (values, initial) => {
   return FIELDS.filter((field) => {
+    if (field === "clientVisible") {
+      return values.clientVisible !== initial.clientVisible;
+    }
+
     return values[field].trim() !== initial[field].trim();
   });
 };
@@ -23,7 +29,7 @@ export const changedFields = (values, initial) => {
 export const toInput = (values, initial) => {
   return Object.fromEntries(
     changedFields(values, initial).map((field) => {
-      return [field, values[field].trim()];
+      return [field, field === "clientVisible" ? values[field] : values[field].trim()];
     }),
   );
 };

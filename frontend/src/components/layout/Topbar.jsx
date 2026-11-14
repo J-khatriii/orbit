@@ -1,9 +1,10 @@
 import { useMatches } from "react-router";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useToast } from "../ui/index.js";
 import OrbitLogo from "./OrbitLogo.jsx";
 import { useAuth } from "../../features/auth/authContext.js";
 import MobileNav from "./MobileNav.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 
 const Topbar = () => {
   const matches = useMatches();
@@ -11,7 +12,7 @@ const Topbar = () => {
   const { activeWorkspace } = useAuth();
 
   const title = matches.findLast((match) => {
-    match.handle?.title;
+    return Boolean(match.handle?.title);
   })?.handle.title;
 
   return (
@@ -43,16 +44,7 @@ const Topbar = () => {
           Search anything
           <kbd className="rounded-md bg-sunken px-1.5 py-0.5 font-sans text-xs">⌘ K</kbd>
         </button>
-        <button
-          type="button"
-          aria-label="Notifications"
-          onClick={() => {
-            return toast.show("Notifications arrive in Phase 5");
-          }}
-          className="grid size-9 place-items-center rounded-control text-ink-soft transition-colors hover:bg-sunken"
-        >
-          <Bell className="size-5" aria-hidden="true" />
-        </button>
+        <NotificationBell />
       </div>
     </header>
   );

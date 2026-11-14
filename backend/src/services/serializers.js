@@ -177,3 +177,99 @@ export const toTemplateTask = (row) => {
     position: row.position,
   };
 };
+
+export const toClientAccess = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+    grantedAt: row.granted_at,
+  };
+};
+
+export const toClientCandidate = (row) => {
+  return {
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+  };
+};
+
+export const toMessage = (row) => {
+  return {
+    id: row.id,
+    body: row.body,
+    internal: row.internal,
+    projectId: row.project_id,
+    projectName: row.project_name,
+    author: row.author_id ? { id: row.author_id, name: row.author_name } : null,
+    createdAt: row.created_at,
+  };
+};
+
+export const toPortalProject = (row) => {
+  return {
+    id: row.id,
+    name: row.name,
+    status: row.status,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    startDate: row.start_date,
+    dueDate: row.due_date,
+    taskCount: row.task_count,
+    tasksDone: row.tasks_done,
+  };
+};
+
+export const toPortalTask = (row) => {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    dueDate: row.due_date,
+    completedAt: row.completed_at,
+  };
+};
+
+export const toPortalClient = (row) => {
+  return {
+    id: row.id,
+    name: row.company_name,
+  };
+};
+
+// What a client sees of a message: no ids of other people, no internal flag.
+export const toPortalMessage = (row, userId) => {
+  return {
+    id: row.id,
+    body: row.body,
+    projectName: row.project_name,
+    authorName: row.author_name,
+    mine: row.author_id === userId,
+    createdAt: row.created_at,
+  };
+};
+
+export const toReview = (row) => {
+  return {
+    id: row.id,
+    decision: row.decision,
+    comment: row.comment,
+    reviewerName: row.reviewer_name,
+    createdAt: row.created_at,
+  };
+};
+
+export const toNotification = (row) => {
+  return {
+    id: row.id,
+    kind: row.kind,
+    clientId: row.client_id,
+    projectId: row.project_id,
+    taskId: row.task_id,
+    data: row.data,
+    read: row.read_at !== null,
+    createdAt: row.created_at,
+  };
+};

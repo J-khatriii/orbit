@@ -7,6 +7,7 @@ import { GAP, positionAfter } from "../utils/ordering.js";
 import { recordActivity } from "./activity.service.js";
 import { loadProject } from "./project.service.js";
 import { toMyTask, toTask } from "./serializers.js";
+import { notifyReviewRequested } from "./notification.service.js";
 
 const COLUMN_NAMES = {
   title: "title",
@@ -53,7 +54,7 @@ const fieldError = (field, message) => {
   });
 };
 
-const loadTask = async (executor, workspaceId, projectId, taskId) => {
+export const loadTask = async (executor, workspaceId, projectId, taskId) => {
   const row = isUuid(taskId)
     ? await tasksRepository.findById(executor, { workspaceId, projectId, id: taskId })
     : undefined;
@@ -66,7 +67,7 @@ const loadTask = async (executor, workspaceId, projectId, taskId) => {
 };
 
 // Tasks can be read in an archived project, but not changed.
-const ensureEditable = (project) => {
+export const ensureEditable = (project) => {
   if (project.archived_at) {
     throw new AppError(409, "PROJECT_ARCHIVED", "Restore this project before changing its tasks");
   }
@@ -171,6 +172,8 @@ export const createTask = async ({ workspaceId, userId, projectId, input }) => {
       action: "task.created",
     });
 
+    await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
+
     return created.id;
   });
 
@@ -229,10 +232,64 @@ export const updateTask = async ({ workspaceId, userId, projectId, taskId, input
         action: "task.updated",
         metadata,
       });
+
+      if (fields.includes("status") || fields.includes("clientVisible")) {
+        await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
+      }
     }
   });
 
   return getTask(workspaceId, projectId, taskId);
+};
+
+// Puts a task in a column, inside a transaction the caller already opened. `before` is the
+// task as it was. Only a change of column is written to the history.
+export const placeTask = async (
+  trx,
+  { workspaceId, userId, project, before, status, afterTaskId },
+) => {
+  const where = { projectId: project.id, status, excludeId: before.id };
+  const afterId = afterTaskId ?? null;
+  let placed = positionAfter(await tasksRepository.listColumn(trx, where), afterId);
+
+  if (placed.crowded) {
+    // No room between the two neighbours: respace the column, then ask again.
+    await tasksRepository.renumberColumn(trx, { projectId: project.id, status });
+    placed = positionAfter(await tasksRepository.listColumn(trx, where), afterId);
+  }
+  if (placed.missing) {
+    throw fieldError("afterTaskId", "That task isn't in this column");
+  }
+
+  await tasksRepository.update(trx, {
+    workspaceId,
+    id: before.id,
+    columns: {
+      status,
+      position: placed.position,
+      ...completionColumns(trx, before.status === "done", status === "done"),
+    },
+  });
+
+  // Only a change of column is worth recording. Reordering within one isn't.
+  if (before.status !== status) {
+    const task = await tasksRepository.findById(trx, {
+      workspaceId,
+      projectId: project.id,
+      id: before.id,
+    });
+
+    await logTaskEvent(trx, {
+      workspaceId,
+      actorId: userId,
+      project,
+      task,
+      action: "task.updated",
+      metadata: { fields: ["status"], status: { from: before.status, to: task.status } },
+    });
+
+    await notifyReviewRequested(trx, { workspaceId, actorId: userId, project, task });
+  }
 };
 
 export const moveTask = async ({ workspaceId, userId, projectId, taskId, input }) => {
@@ -242,49 +299,15 @@ export const moveTask = async ({ workspaceId, userId, projectId, taskId, input }
     ensureEditable(project);
 
     const before = await loadTask(trx, workspaceId, project.id, taskId);
-    const where = { projectId: project.id, status: input.status, excludeId: before.id };
-    const afterId = input.afterTaskId ?? null;
-    let placed = positionAfter(await tasksRepository.listColumn(trx, where), afterId);
 
-    if (placed.crowded) {
-      // No room between the two neighbours: respace the column, then ask again.
-      await tasksRepository.renumberColumn(trx, {
-        projectId: project.id,
-        status: input.status,
-      });
-      placed = positionAfter(await tasksRepository.listColumn(trx, where), afterId);
-    }
-    if (placed.missing) {
-      throw fieldError("afterTaskId", "That task isn't in this column");
-    }
-
-    await tasksRepository.update(trx, {
+    await placeTask(trx, {
       workspaceId,
-      id: before.id,
-      columns: {
-        status: input.status,
-        position: placed.position,
-        ...completionColumns(trx, before.status === "done", input.status === "done"),
-      },
+      userId,
+      project,
+      before,
+      status: input.status,
+      afterTaskId: input.afterTaskId,
     });
-
-    // Only a change of column is worth recording. Reordering within one isn't.
-    if (before.status !== input.status) {
-      const task = await tasksRepository.findById(trx, {
-        workspaceId,
-        projectId: project.id,
-        id: before.id,
-      });
-
-      await logTaskEvent(trx, {
-        workspaceId,
-        actorId: userId,
-        project,
-        task,
-        action: "task.updated",
-        metadata: { fields: ["status"], status: { from: before.status, to: task.status } },
-      });
-    }
   });
 
   return getTask(workspaceId, projectId, taskId);

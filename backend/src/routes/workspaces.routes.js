@@ -16,6 +16,10 @@ import projectsRoutes from "./projects.routes.js";
 import { listMyTasksSchema } from "../schemas/tasks.schemas.js";
 import * as tasksController from "../controllers/tasks.controller.js";
 import templatesRoutes from "./templates.routes.js";
+import clientAccessRoutes from "./clientAccess.routes.js";
+import messagesRoutes from "./messages.routes.js";
+import portalRoutes from "./portal.routes.js";
+import notificationsRoutes from "./notifications.routes.js";
 
 const router = Router();
 
@@ -81,6 +85,24 @@ router.delete(
   requireRole("owner", "admin"),
   membersController.removeMember,
 );
+
+// Who can open a client's portal: owners and admins only. Mounted before the clients
+// router so this stricter rule applies to these paths.
+router.use(
+  "/:workspaceId/clients/:clientId/access",
+  workspaceContext,
+  requireRole("owner", "admin"),
+  clientAccessRoutes,
+);
+
+// A client's conversation. Team only: clients (the role) use the portal instead.
+router.use(
+  "/:workspaceId/clients/:clientId/messages",
+  workspaceContext,
+  requireRole("owner", "admin", "member"),
+  messagesRoutes,
+);
+
 // The client list is internal: clients (the role) never see it.
 router.use(
   "/:workspaceId/clients",
@@ -122,5 +144,11 @@ router.use(
   requireRole("owner", "admin", "member"),
   templatesRoutes,
 );
+
+// The client portal. Clients only: the team uses the routes above.
+router.use("/:workspaceId/portal", workspaceContext, requireRole("client"), portalRoutes);
+
+// A person's own notifications. Every role, clients included.
+router.use("/:workspaceId/notifications", workspaceContext, notificationsRoutes);
 
 export default router;

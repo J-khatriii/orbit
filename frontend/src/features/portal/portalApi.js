@@ -1,8 +1,15 @@
 import { api } from "../../lib/api.js";
 import { PAGE_SIZE } from "../messages/messagesApi.js";
 
+const BASE_URL = "/api/v1";
+
 const portalUrl = (workspaceId) => {
   return `/workspaces/${workspaceId}/portal`;
+};
+
+// A plain link the browser can open. The session cookie goes along with it.
+export const portalFileUrl = (workspaceId, fileId) => {
+  return `${BASE_URL}${portalUrl(workspaceId)}/files/${fileId}/download`;
 };
 
 export const portalApi = {
@@ -25,5 +32,10 @@ export const portalApi = {
   },
   review: ({ workspaceId, taskId, input }) => {
     return api.post(`${portalUrl(workspaceId)}/tasks/${taskId}/review`, input);
+  },
+  files: (workspaceId, clientId) => {
+    const filter = clientId ? `&clientId=${clientId}` : "";
+
+    return api.get(`${portalUrl(workspaceId)}/files?page=1&pageSize=100${filter}`);
   },
 };

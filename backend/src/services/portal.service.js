@@ -5,7 +5,14 @@ import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { listAccessibleClientIds } from "./clientAccess.service.js";
 import { notifyClientMessage } from "./notification.service.js";
-import { toPortalClient, toPortalMessage, toPortalProject, toPortalTask } from "./serializers.js";
+import { canPreview } from "./file.service.js";
+import {
+  toPortalClient,
+  toPortalFile,
+  toPortalMessage,
+  toPortalProject,
+  toPortalTask,
+} from "./serializers.js";
 
 export const listProjects = async ({ workspaceId, userId }) => {
   const clientIds = await listAccessibleClientIds(workspaceId, userId);
@@ -126,4 +133,53 @@ export const createClientMessage = async ({ workspaceId, userId, clientId, input
   });
 
   return { message: toPortalMessage(row, userId) };
+};
+
+export const listFiles = async ({ workspaceId, userId, query }) => {
+  const accessible = await listAccessibleClientIds(workspaceId, userId);
+  // A client filter can only narrow what the person already has access to.
+  const clientIds = query.clientId
+    ? accessible.filter((id) => {
+        return id === query.clientId;
+      })
+    : accessible;
+
+  if (clientIds.length === 0) {
+    return { files: [], page: query.page, pageSize: query.pageSize, total: 0 };
+  }
+
+  const filters = { workspaceId, clientIds };
+  const [rows, total] = await Promise.all([
+    portalRepository.listFiles(db, {
+      ...filters,
+      limit: query.pageSize,
+      offset: (query.page - 1) * query.pageSize,
+    }),
+    portalRepository.countFiles(db, filters),
+  ]);
+
+  return {
+    files: rows.map((row) => {
+      return toPortalFile(row, canPreview(row.content_type));
+    }),
+    page: query.page,
+    pageSize: query.pageSize,
+    total,
+  };
+};
+
+// The database row, including where the bytes are. For the download route only.
+export const getFile = async ({ workspaceId, userId, fileId }) => {
+  const clientIds = await listAccessibleClientIds(workspaceId, userId);
+  const row =
+    clientIds.length > 0 && isUuid(fileId)
+      ? await portalRepository.findFile(db, { workspaceId, clientIds, fileId })
+      : undefined;
+
+  // The same answer whether the file doesn't exist, isn't shared, or belongs to someone else.
+  if (!row) {
+    throw new AppError(404, "FILE_NOT_FOUND", "File not found");
+  }
+
+  return row;
 };

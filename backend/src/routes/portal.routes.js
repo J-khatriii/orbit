@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { validate } from "../middleware/validate.js";
+import { portalListFilesSchema } from "../schemas/files.schemas.js";
 import { createPortalMessageSchema, listMessagesSchema } from "../schemas/messages.schemas.js";
 import { reviewTaskSchema } from "../schemas/reviews.schemas.js";
 import * as portalController from "../controllers/portal.controller.js";
@@ -23,6 +24,9 @@ router.post(
   validate(createPortalMessageSchema),
   portalController.createClientMessage,
 );
+
+router.get("/files", validate(portalListFilesSchema, "query"), portalController.listFiles);
+router.get("/files/:fileId/download", portalController.downloadFile);
 
 router.post("/tasks/:taskId/review", validate(reviewTaskSchema), reviewsController.reviewTask);
 

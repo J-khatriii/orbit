@@ -35,3 +35,9 @@ export const updateFileSchema = z
     },
     { message: "Nothing to change" },
   );
+
+export const portalListFilesSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(50),
+  clientId: z.string().regex(UUID_PATTERN, "Choose a client").optional(),
+});

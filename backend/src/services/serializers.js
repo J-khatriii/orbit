@@ -287,3 +287,16 @@ export const toFile = (row) => {
     createdAt: row.created_at,
   };
 };
+
+export const toPortalFile = (row, previewable) => {
+  return {
+    id: row.id,
+    name: row.name,
+    contentType: row.content_type,
+    size: row.size_bytes,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    createdAt: row.created_at,
+    previewable,
+  };
+};

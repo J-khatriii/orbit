@@ -3,7 +3,15 @@ import { UUID_PATTERN } from "./fields.js";
 
 export const createMessageSchema = z.object({
   body: z.string().trim().min(1, "Write a message").max(5000, "Use at most 5000 characters"),
-  internal: z.boolean().default(false),
+  // JSON sends a boolean. A form with files sends the text "true" or "false".
+  internal: z
+    .union([
+      z.boolean(),
+      z.enum(["true", "false"]).transform((value) => {
+        return value === "true";
+      }),
+    ])
+    .default(false),
   projectId: z.string().regex(UUID_PATTERN, "Choose a project").nullable().optional(),
 });
 

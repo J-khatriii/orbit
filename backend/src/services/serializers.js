@@ -195,7 +195,7 @@ export const toClientCandidate = (row) => {
   };
 };
 
-export const toMessage = (row) => {
+export const toMessage = (row, attachments = []) => {
   return {
     id: row.id,
     body: row.body,
@@ -203,6 +203,7 @@ export const toMessage = (row) => {
     projectId: row.project_id,
     projectName: row.project_name,
     author: row.author_id ? { id: row.author_id, name: row.author_name } : null,
+    attachments,
     createdAt: row.created_at,
   };
 };
@@ -240,13 +241,14 @@ export const toPortalClient = (row) => {
 };
 
 // What a client sees of a message: no ids of other people, no internal flag.
-export const toPortalMessage = (row, userId) => {
+export const toPortalMessage = (row, userId, attachments = []) => {
   return {
     id: row.id,
     body: row.body,
     projectName: row.project_name,
     authorName: row.author_name,
     mine: row.author_id === userId,
+    attachments,
     createdAt: row.created_at,
   };
 };
@@ -297,6 +299,27 @@ export const toPortalFile = (row, previewable) => {
     clientId: row.client_id,
     clientName: row.client_name,
     createdAt: row.created_at,
+    previewable,
+  };
+};
+
+export const toAttachment = (row) => {
+  return {
+    id: row.id,
+    name: row.name,
+    contentType: row.content_type,
+    size: row.size_bytes,
+    clientVisible: row.client_visible,
+  };
+};
+
+// What a client sees of an attachment. Nothing about sharing or who uploaded it.
+export const toPortalAttachment = (row, previewable) => {
+  return {
+    id: row.id,
+    name: row.name,
+    contentType: row.content_type,
+    size: row.size_bytes,
     previewable,
   };
 };

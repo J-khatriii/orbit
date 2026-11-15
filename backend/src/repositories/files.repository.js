@@ -78,3 +78,9 @@ export const update = async (executor, { workspaceId, id, columns }) => {
 export const remove = async (executor, { workspaceId, id }) => {
   await executor("files").where({ workspace_id: workspaceId, id }).del();
 };
+
+export const insertMany = async (executor, rows) => {
+  if (rows.length > 0) {
+    await executor("files").insert(rows);
+  }
+};

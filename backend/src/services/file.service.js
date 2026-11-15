@@ -76,6 +76,26 @@ const detectType = async (filePath, name) => {
   }
 };
 
+// Checks a waiting upload and says what it really is. Throws if it's refused.
+export const inspectUpload = async (upload) => {
+  if (upload.size === 0) {
+    throw new AppError(400, "EMPTY_FILE", "That file is empty");
+  }
+
+  const name = cleanName(upload.originalname);
+  const contentType = await detectType(upload.path, name);
+
+  if (!contentType) {
+    throw new AppError(
+      415,
+      "UNSUPPORTED_FILE_TYPE",
+      "This type of file isn't allowed. Use images, PDFs, Word, Excel or PowerPoint files, text, CSV or ZIP.",
+    );
+  }
+
+  return { name, contentType };
+};
+
 const loadClient = async (executor, workspaceId, clientId) => {
   const row = isUuid(clientId)
     ? await filesRepository.findClient(executor, { workspaceId, clientId })
@@ -146,20 +166,7 @@ export const uploadFile = async ({ workspaceId, userId, clientId, upload, input 
     if (input.projectId) {
       await ensureProjectBelongs(db, workspaceId, client.id, input.projectId);
     }
-    if (upload.size === 0) {
-      throw new AppError(400, "EMPTY_FILE", "That file is empty");
-    }
-
-    const name = cleanName(upload.originalname);
-    const contentType = await detectType(upload.path, name);
-
-    if (!contentType) {
-      throw new AppError(
-        415,
-        "UNSUPPORTED_FILE_TYPE",
-        "This type of file isn't allowed. Use images, PDFs, Word, Excel or PowerPoint files, text, CSV or ZIP.",
-      );
-    }
+    const { name, contentType } = await inspectUpload(upload);
 
     const id = randomUUID();
     const key = `${workspaceId}/${id}`;
@@ -235,4 +242,55 @@ export const deleteFile = async ({ workspaceId, clientId, fileId }) => {
 
   await filesRepository.remove(db, { workspaceId, id: row.id });
   await storage.remove(row.storage_key);
+};
+
+// Checks and stores the files that come with a message. If any one fails, the ones already
+// stored are removed and the error is thrown. Nothing is written to the database here.
+export const storeUploads = async (workspaceId, uploads) => {
+  const results = await Promise.allSettled(
+    uploads.map(async (upload) => {
+      const { name, contentType } = await inspectUpload(upload);
+      const id = randomUUID();
+      const key = `${workspaceId}/${id}`;
+
+      await storage.put(key, createReadStream(upload.path));
+
+      return { id, key, name, contentType, size: upload.size };
+    }),
+  );
+  const stored = results
+    .filter((result) => {
+      return result.status === "fulfilled";
+    })
+    .map((result) => {
+      return result.value;
+    });
+  const failed = results.find((result) => {
+    return result.status === "rejected";
+  });
+
+  if (failed) {
+    await discardStored(stored);
+    throw failed.reason;
+  }
+
+  return stored;
+};
+
+// Removes stored bytes that no database row points to.
+export const discardStored = async (stored) => {
+  await Promise.all(
+    stored.map((item) => {
+      return storage.remove(item.key);
+    }),
+  );
+};
+
+// Removes the waiting copies of uploads.
+export const removeTemps = async (uploads) => {
+  await Promise.all(
+    uploads.map((upload) => {
+      return rm(upload.path, { force: true });
+    }),
+  );
 };

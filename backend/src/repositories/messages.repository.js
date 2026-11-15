@@ -75,3 +75,21 @@ export const insert = async (executor, columns) => {
 
   return row;
 };
+
+// The files attached to these messages. A client's view only gets files that are still shared.
+export const listAttachments = async (executor, { workspaceId, messageIds, onlyVisible }) => {
+  if (messageIds.length === 0) {
+    return [];
+  }
+
+  const query = executor("files")
+    .where("workspace_id", workspaceId)
+    .whereIn("message_id", messageIds)
+    .orderBy([{ column: "created_at" }, { column: "id" }]);
+
+  if (onlyVisible) {
+    query.where("client_visible", true);
+  }
+
+  return query.select(["id", "message_id", "name", "content_type", "size_bytes", "client_visible"]);
+};

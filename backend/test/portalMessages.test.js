@@ -92,6 +92,7 @@ describe("portal messages", () => {
     const res = await person.agent.get(portalMessages(workspaceId, clientA));
 
     expect(Object.keys(res.body.messages[0]).sort()).toEqual([
+      "attachments",
       "authorName",
       "body",
       "createdAt",

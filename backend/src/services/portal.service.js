@@ -5,13 +5,15 @@ import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { listAccessibleClientIds } from "./clientAccess.service.js";
 import { notifyClientMessage } from "./notification.service.js";
-import { canPreview } from "./file.service.js";
+import { canPreview, discardStored, removeTemps, storeUploads } from "./file.service.js";
+import { attachmentsByMessage, insertAttachments } from "./messageAttachments.js";
 import {
   toPortalClient,
   toPortalFile,
   toPortalMessage,
   toPortalProject,
   toPortalTask,
+  toPortalAttachment,
 } from "./serializers.js";
 
 export const listProjects = async ({ workspaceId, userId }) => {
@@ -97,10 +99,18 @@ export const listClientMessages = async ({ workspaceId, userId, clientId, query 
     }),
     messagesRepository.count(db, filters),
   ]);
+  // Only files that are still shared.
+  const attachments = await attachmentsByMessage(db, {
+    workspaceId,
+    messageIds: rows.map((row) => {
+      return row.id;
+    }),
+    forClient: true,
+  });
 
   return {
     messages: rows.map((row) => {
-      return toPortalMessage(row, userId);
+      return toPortalMessage(row, userId, attachments.get(row.id) ?? []);
     }),
     page: query.page,
     pageSize: query.pageSize,
@@ -108,31 +118,58 @@ export const listClientMessages = async ({ workspaceId, userId, clientId, query 
   };
 };
 
-export const createClientMessage = async ({ workspaceId, userId, clientId, input }) => {
-  const client = await requireClientAccess(workspaceId, userId, clientId);
+export const createClientMessage = async ({ workspaceId, userId, clientId, input, uploads }) => {
+  try {
+    const client = await requireClientAccess(workspaceId, userId, clientId);
+    const stored = await storeUploads(workspaceId, uploads);
 
-  const row = await db.transaction(async (trx) => {
-    const created = await messagesRepository.insert(trx, {
-      workspace_id: workspaceId,
-      client_id: clientId,
-      project_id: null,
-      author_id: userId,
-      body: input.body,
-      internal: false,
-    });
-    const saved = await messagesRepository.findById(trx, { workspaceId, id: created.id });
+    try {
+      const { row, files } = await db.transaction(async (trx) => {
+        const created = await messagesRepository.insert(trx, {
+          workspace_id: workspaceId,
+          client_id: clientId,
+          project_id: null,
+          author_id: userId,
+          body: input.body,
+          internal: false,
+        });
+        // What a client attaches is visible to them and to the team.
+        const saved = await insertAttachments(trx, {
+          workspaceId,
+          clientId,
+          userId,
+          messageId: created.id,
+          stored,
+          clientVisible: true,
+        });
+        const message = await messagesRepository.findById(trx, { workspaceId, id: created.id });
 
-    await notifyClientMessage(trx, {
-      workspaceId,
-      authorId: userId,
-      authorName: saved.author_name,
-      client,
-    });
+        await notifyClientMessage(trx, {
+          workspaceId,
+          authorId: userId,
+          authorName: message.author_name,
+          client,
+        });
 
-    return saved;
-  });
+        return { row: message, files: saved };
+      });
 
-  return { message: toPortalMessage(row, userId) };
+      return {
+        message: toPortalMessage(
+          row,
+          userId,
+          files.map((file) => {
+            return toPortalAttachment(file, canPreview(file.content_type));
+          }),
+        ),
+      };
+    } catch (error) {
+      await discardStored(stored);
+      throw error;
+    }
+  } finally {
+    await removeTemps(uploads);
+  }
 };
 
 export const listFiles = async ({ workspaceId, userId, query }) => {

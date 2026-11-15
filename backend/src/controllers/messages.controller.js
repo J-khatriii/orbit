@@ -16,6 +16,7 @@ export const createMessage = async (req, res) => {
     authorId: req.user.id,
     clientId: req.params.clientId,
     input: req.validated.body,
+    uploads: req.files ?? [],
   });
 
   res.status(201).json(result);

@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Download, FileText, Pencil, Trash2 } from "lucide-react";
+import { Download, Eye, Pencil, Trash2 } from "lucide-react";
 import { Badge, useToast } from "../ui/index.js";
-import { formatSize } from "../../features/files/files.js";
+import { canPreview, formatSize, isImage } from "../../features/files/files.js";
 import { downloadUrl } from "../../features/files/filesApi.js";
 import { useDeleteFile, useUpdateFile } from "../../features/files/useFileMutations.js";
 import { timeAgo } from "../../lib/timeAgo.js";
+import FileThumb from "./FileThumb.jsx";
 
 const actionClass = "inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink";
 
-const FileRow = ({ workspaceId, clientId, file, canDelete }) => {
+const FileRow = ({ workspaceId, clientId, file, canDelete, onPreview }) => {
   const toast = useToast();
   const update = useUpdateFile();
   const remove = useDeleteFile();
@@ -17,6 +18,7 @@ const FileRow = ({ workspaceId, clientId, file, canDelete }) => {
   const [confirming, setConfirming] = useState(false);
 
   const ids = { workspaceId, clientId, fileId: file.id };
+  const previewable = canPreview(file.contentType);
 
   const showError = (error) => {
     toast.show(error.message);
@@ -77,7 +79,18 @@ const FileRow = ({ workspaceId, clientId, file, canDelete }) => {
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
-      <FileText className="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
+      <FileThumb
+        name={file.name}
+        isImage={isImage(file.contentType)}
+        src={downloadUrl({ ...ids, inline: true })}
+        onOpen={
+          previewable
+            ? () => {
+                onPreview(file);
+              }
+            : undefined
+        }
+      />
 
       <div className="min-w-0 flex-1 basis-56">
         {editing ? (
@@ -139,6 +152,18 @@ const FileRow = ({ workspaceId, clientId, file, canDelete }) => {
       </label>
 
       <div className="flex items-center gap-3">
+        {previewable && (
+          <button
+            type="button"
+            onClick={() => {
+              onPreview(file);
+            }}
+            className={actionClass}
+          >
+            <Eye className="size-4" aria-hidden="true" />
+            Preview
+          </button>
+        )}
         <a href={downloadUrl(ids)} className={actionClass} aria-label={`Download ${file.name}`}>
           <Download className="size-4" aria-hidden="true" />
           Download

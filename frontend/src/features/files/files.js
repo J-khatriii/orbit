@@ -14,3 +14,20 @@ export const formatSize = (bytes) => {
 
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 };
+
+const PREVIEW_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+]);
+
+// Must match what the server will show inline.
+export const canPreview = (contentType) => {
+  return PREVIEW_TYPES.has(contentType);
+};
+
+export const isImage = (contentType) => {
+  return contentType.startsWith("image/");
+};

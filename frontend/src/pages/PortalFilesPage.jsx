@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { Download, FileText } from "lucide-react";
+import { Download, Eye } from "lucide-react";
+import FilePreview from "../components/files/FilePreview.jsx";
+import FileThumb from "../components/files/FileThumb.jsx";
 import { Card, Spinner } from "../components/ui/index.js";
 import { useAuth } from "../features/auth/authContext.js";
-import { formatSize } from "../features/files/files.js";
+import { formatSize, isImage } from "../features/files/files.js";
 import { portalFileUrl } from "../features/portal/portalApi.js";
 import { usePortalClients } from "../features/portal/usePortal.js";
 import { usePortalFiles } from "../features/portal/usePortalFiles.js";
 import { timeAgo } from "../lib/timeAgo.js";
+
+const actionClass =
+  "inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline";
 
 const PortalFilesPage = () => {
   const { activeWorkspace } = useAuth();
@@ -14,6 +19,7 @@ const PortalFilesPage = () => {
   const isClient = activeWorkspace?.role === "client";
   const clients = usePortalClients(workspaceId, isClient);
   const [chosenId, setChosenId] = useState("");
+  const [previewing, setPreviewing] = useState(null);
   const files = usePortalFiles(workspaceId, chosenId, isClient);
 
   if (!isClient) {
@@ -95,7 +101,18 @@ const PortalFilesPage = () => {
             {list.map((file) => {
               return (
                 <li key={file.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
-                  <FileText className="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
+                  <FileThumb
+                    name={file.name}
+                    isImage={isImage(file.contentType)}
+                    src={portalFileUrl(workspaceId, file.id, true)}
+                    onOpen={
+                      file.previewable
+                        ? () => {
+                            setPreviewing(file);
+                          }
+                        : undefined
+                    }
+                  />
                   <div className="min-w-0 flex-1 basis-56">
                     <p className="truncate text-sm font-medium text-ink" title={file.name}>
                       {file.name}
@@ -105,14 +122,28 @@ const PortalFilesPage = () => {
                       {clientList.length > 1 ? `, ${file.clientName}` : ""}
                     </p>
                   </div>
-                  <a
-                    href={portalFileUrl(workspaceId, file.id)}
-                    aria-label={`Download ${file.name}`}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
-                  >
-                    <Download className="size-4" aria-hidden="true" />
-                    Download
-                  </a>
+                  <div className="flex items-center gap-4">
+                    {file.previewable && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewing(file);
+                        }}
+                        className={actionClass}
+                      >
+                        <Eye className="size-4" aria-hidden="true" />
+                        Preview
+                      </button>
+                    )}
+                    <a
+                      href={portalFileUrl(workspaceId, file.id)}
+                      aria-label={`Download ${file.name}`}
+                      className={actionClass}
+                    >
+                      <Download className="size-4" aria-hidden="true" />
+                      Download
+                    </a>
+                  </div>
                 </li>
               );
             })}
@@ -123,6 +154,18 @@ const PortalFilesPage = () => {
             </p>
           )}
         </Card>
+      )}
+
+      {previewing && (
+        <FilePreview
+          name={previewing.name}
+          contentType={previewing.contentType}
+          inlineUrl={portalFileUrl(workspaceId, previewing.id, true)}
+          downloadHref={portalFileUrl(workspaceId, previewing.id)}
+          onClose={() => {
+            setPreviewing(null);
+          }}
+        />
       )}
     </div>
   );

@@ -3,9 +3,11 @@ import { Button, Card, Spinner } from "../ui/index.js";
 import FileRow from "../files/FileRow.jsx";
 import UploadZone from "../files/UploadZone.jsx";
 import { MAX_UPLOAD_MB } from "../../features/files/files.js";
+import { downloadUrl } from "../../features/files/filesApi.js";
 import { useUploadFile } from "../../features/files/useFileMutations.js";
 import { useFiles } from "../../features/files/useFiles.js";
 import { useAuth } from "../../features/auth/authContext.js";
+import FilePreview from "../files/FilePreview.jsx";
 
 const ClientFiles = ({ workspaceId, clientId }) => {
   const { activeWorkspace } = useAuth();
@@ -13,6 +15,7 @@ const ClientFiles = ({ workspaceId, clientId }) => {
   const upload = useUploadFile();
   const [uploads, setUploads] = useState([]);
   const [shareNew, setShareNew] = useState(false);
+  const [previewing, setPreviewing] = useState(null);
   const canDelete = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
 
   const changeUpload = (key, changes) => {
@@ -171,6 +174,7 @@ const ClientFiles = ({ workspaceId, clientId }) => {
                   clientId={clientId}
                   file={file}
                   canDelete={canDelete}
+                  onPreview={setPreviewing}
                 />
               );
             })}
@@ -181,6 +185,18 @@ const ClientFiles = ({ workspaceId, clientId }) => {
           <p className="text-xs text-ink-muted">
             Showing the newest {files.length} of {total} files.
           </p>
+        )}
+
+        {previewing && (
+          <FilePreview
+            name={previewing.name}
+            contentType={previewing.contentType}
+            inlineUrl={downloadUrl({ workspaceId, clientId, fileId: previewing.id, inline: true })}
+            downloadHref={downloadUrl({ workspaceId, clientId, fileId: previewing.id })}
+            onClose={() => {
+              setPreviewing(null);
+            }}
+          />
         )}
       </div>
     </Card>

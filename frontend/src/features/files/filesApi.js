@@ -7,11 +7,11 @@ const filesUrl = (workspaceId, clientId) => {
   return `/workspaces/${workspaceId}/clients/${clientId}/files`;
 };
 
-// A plain link the browser can open. The session cookie goes along with it.
-export const downloadUrl = ({ workspaceId, clientId, fileId }) => {
-  return `${BASE_URL}${filesUrl(workspaceId, clientId)}/${fileId}/download`;
-};
+export const downloadUrl = ({ workspaceId, clientId, fileId, inline = false }) => {
+  const suffix = inline ? "?inline=1" : "";
 
+  return `${BASE_URL}${filesUrl(workspaceId, clientId)}/${fileId}/download${suffix}`;
+};
 const parseJson = (text) => {
   try {
     return JSON.parse(text);

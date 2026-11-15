@@ -8,8 +8,10 @@ const portalUrl = (workspaceId) => {
 };
 
 // A plain link the browser can open. The session cookie goes along with it.
-export const portalFileUrl = (workspaceId, fileId) => {
-  return `${BASE_URL}${portalUrl(workspaceId)}/files/${fileId}/download`;
+export const portalFileUrl = (workspaceId, fileId, inline = false) => {
+  const suffix = inline ? "?inline=1" : "";
+
+  return `${BASE_URL}${portalUrl(workspaceId)}/files/${fileId}/download${suffix}`;
 };
 
 export const portalApi = {

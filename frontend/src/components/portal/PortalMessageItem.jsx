@@ -1,7 +1,9 @@
 import { Avatar } from "../ui/index.js";
+import MessageAttachments from "../files/MessageAttachments.jsx";
 import { formatWhen } from "../../features/messages/messages.js";
+import { portalFileUrl } from "../../features/portal/portalApi.js";
 
-const PortalMessageItem = ({ message }) => {
+const PortalMessageItem = ({ message, workspaceId }) => {
   const name = message.mine ? "You" : (message.authorName ?? "Your team");
 
   return (
@@ -15,6 +17,14 @@ const PortalMessageItem = ({ message }) => {
           </time>
         </div>
         <p className="mt-1 text-sm wrap-break-word whitespace-pre-wrap text-ink">{message.body}</p>
+        {message.attachments?.length > 0 && (
+          <MessageAttachments
+            attachments={message.attachments}
+            urlFor={(file, inline) => {
+              return portalFileUrl(workspaceId, file.id, inline);
+            }}
+          />
+        )}
       </div>
     </li>
   );

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { discardUpload, uploadFiles } from "../middleware/upload.js";
 import { validate } from "../middleware/validate.js";
 import { createMessageSchema, listMessagesSchema } from "../schemas/messages.schemas.js";
 import * as messagesController from "../controllers/messages.controller.js";
@@ -8,6 +9,9 @@ import * as messagesController from "../controllers/messages.controller.js";
 const router = Router({ mergeParams: true });
 
 router.get("/", validate(listMessagesSchema, "query"), messagesController.listMessages);
-router.post("/", validate(createMessageSchema), messagesController.createMessage);
+router.post("/", uploadFiles, validate(createMessageSchema), messagesController.createMessage);
+
+// Last: cleans up waiting uploads if anything above failed.
+router.use(discardUpload);
 
 export default router;

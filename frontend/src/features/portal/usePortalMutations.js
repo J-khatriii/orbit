@@ -8,9 +8,14 @@ export const useSendClientMessage = () => {
   return useMutation({
     mutationFn: portalApi.sendMessage,
     onSuccess: (data, variables) => {
-      return queryClient.invalidateQueries({
-        queryKey: [...portalKey(variables.workspaceId), "messages", variables.clientId],
-      });
+      return Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...portalKey(variables.workspaceId), "messages", variables.clientId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["workspaces", variables.workspaceId, "portal-files"],
+        }),
+      ]);
     },
   });
 };

@@ -69,7 +69,9 @@ const PortalConversation = ({ workspaceId, client }) => {
         )}
         <ul ref={listRef} className="max-h-128 space-y-1 overflow-y-auto">
           {list.map((message) => {
-            return <PortalMessageItem key={message.id} message={message} />;
+            return (
+              <PortalMessageItem key={message.id} message={message} workspaceId={workspaceId} />
+            );
           })}
         </ul>
       </>

@@ -14,6 +14,8 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default("Orbit <no-reply@orbit.local>"),
+  STORAGE_DIR: z.string().default("./storage"),
+  MAX_UPLOAD_MB: z.coerce.number().int().positive().max(100).default(25),
 });
 
 const parsed = schema.safeParse(process.env);

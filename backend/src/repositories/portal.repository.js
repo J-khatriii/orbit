@@ -65,3 +65,48 @@ export const findClient = async (executor, { workspaceId, clientId }) => {
     .whereNull("archived_at")
     .first(["id", "company_name"]);
 };
+
+// A client sees a file only if it's shared, belongs to a client they can access, and that
+// client isn't archived.
+const visibleFiles = (executor, { workspaceId, clientIds }) => {
+  return executor("files")
+    .join("clients", "clients.id", "files.client_id")
+    .where("files.workspace_id", workspaceId)
+    .whereIn("files.client_id", clientIds)
+    .where("files.client_visible", true)
+    .whereNull("clients.archived_at");
+};
+
+const FILE_COLUMNS = [
+  "files.id",
+  "files.client_id",
+  "files.name",
+  "files.content_type",
+  "files.size_bytes",
+  "files.created_at",
+  "clients.company_name as client_name",
+];
+
+export const listFiles = async (executor, { limit, offset, ...filters }) => {
+  return visibleFiles(executor, filters)
+    .orderBy([
+      { column: "files.created_at", order: "desc" },
+      { column: "files.id", order: "desc" },
+    ])
+    .limit(limit)
+    .offset(offset)
+    .select(FILE_COLUMNS);
+};
+
+export const countFiles = async (executor, filters) => {
+  const row = await visibleFiles(executor, filters).count("* as total").first();
+
+  return Number(row.total);
+};
+
+// Includes where the bytes are, for the download route only.
+export const findFile = async (executor, { fileId, ...filters }) => {
+  return visibleFiles(executor, filters)
+    .where("files.id", fileId)
+    .first([...FILE_COLUMNS, "files.storage_key"]);
+};

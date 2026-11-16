@@ -69,7 +69,14 @@ const ClientMessages = ({ workspaceId, clientId, clientName }) => {
         )}
         <ul ref={listRef} className="max-h-128 space-y-1 overflow-y-auto">
           {list.map((message) => {
-            return <MessageItem key={message.id} message={message} />;
+            return (
+              <MessageItem
+                key={message.id}
+                message={message}
+                workspaceId={workspaceId}
+                clientId={clientId}
+              />
+            );
           })}
         </ul>
       </>

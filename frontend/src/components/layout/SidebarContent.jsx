@@ -29,7 +29,12 @@ const NAV = [
   { label: "Projects", to: "/projects", icon: Columns3, hideFor: ["client"] },
   { label: "My tasks", to: "/my-tasks", icon: ListChecks, hideFor: ["client"] },
   { label: "Activity", icon: MessagesSquare, phase: 5 },
-  { label: "Files", icon: Folder, phase: 6 },
+  {
+    label: "Files",
+    to: "/portal/files",
+    icon: Folder,
+    hideFor: ["owner", "admin", "member"],
+  },
   { label: "Approvals", icon: CircleCheck, phase: 6 },
   { label: "Invoices", icon: Receipt, phase: 7 },
   { label: "Templates", to: "/templates", icon: ClipboardList, hideFor: ["client"] },

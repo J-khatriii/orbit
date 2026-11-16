@@ -1,4 +1,4 @@
-const BASE_URL = "/api/v1";
+export const BASE_URL = "/api/v1";
 
 // Every failed request becomes one of these, so screens only handle one kind of error.
 //   status:  the HTTP status (0 means the server couldn't be reached)

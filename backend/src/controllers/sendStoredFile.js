@@ -30,6 +30,8 @@ export const sendStoredFile = async (req, res, row) => {
 
   res.setHeader("Content-Type", row.content_type);
   res.setHeader("Content-Length", row.size_bytes);
+  // The browser must trust the type we send and never guess a different one.
+  res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Content-Disposition", disposition(inline ? "inline" : "attachment", row.name));
   // Previews and thumbnails may be reused for a few minutes. Downloads are always fresh.
   res.setHeader(

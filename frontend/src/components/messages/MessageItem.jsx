@@ -1,7 +1,9 @@
 import { Avatar, Badge } from "../ui/index.js";
+import MessageAttachments from "../files/MessageAttachments.jsx";
+import { downloadUrl } from "../../features/files/filesApi.js";
 import { formatWhen } from "../../features/messages/messages.js";
 
-const MessageItem = ({ message }) => {
+const MessageItem = ({ message, workspaceId, clientId }) => {
   const name = message.author?.name ?? "Former team member";
 
   return (
@@ -16,7 +18,15 @@ const MessageItem = ({ message }) => {
           {message.internal && <Badge tone="clay">Internal note</Badge>}
           {message.projectName && <Badge tone="neutral">{message.projectName}</Badge>}
         </div>
-        <p className="mt-1 text-sm break-words whitespace-pre-wrap text-ink">{message.body}</p>
+        <p className="mt-1 text-sm wrap-break-word whitespace-pre-wrap text-ink">{message.body}</p>
+        {message.attachments?.length > 0 && (
+          <MessageAttachments
+            attachments={message.attachments}
+            urlFor={(file, inline) => {
+              return downloadUrl({ workspaceId, clientId, fileId: file.id, inline });
+            }}
+          />
+        )}
       </div>
     </li>
   );

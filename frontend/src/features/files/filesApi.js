@@ -20,7 +20,7 @@ const parseJson = (text) => {
   }
 };
 
-const sendForm = ({ url, form, onProgress }) => {
+export const sendForm = ({ url, form, onProgress }) => {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
 

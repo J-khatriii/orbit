@@ -64,3 +64,19 @@ export const deleteInvoice = async (req, res) => {
 
   res.status(204).end();
 };
+
+export const downloadPdf = async (req, res) => {
+  const { pdf, filename } = await invoiceService.getInvoicePdf({
+    workspaceId: req.workspace.id,
+    invoiceId: req.params.invoiceId,
+  });
+  // ?inline=1 opens it in the browser. Otherwise it downloads.
+  const type = req.query.inline === "1" ? "inline" : "attachment";
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Length", pdf.length);
+  res.setHeader("Content-Disposition", `${type}; filename="${filename}"`);
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.end(pdf);
+};

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import InvoiceStatusBadge from "./InvoiceStatusBadge.jsx";
 import { Button, Card, Modal, useToast } from "../ui/index.js";
 import { useVoidInvoice } from "../../features/invoices/useInvoiceMutations.js";
 import { formatDay } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
+import { invoicePdfUrl } from "../../features/invoices/invoicesApi.js";
 
 const InvoiceView = ({ workspaceId, invoice }) => {
   const toast = useToast();
@@ -61,6 +62,16 @@ const InvoiceView = ({ workspaceId, invoice }) => {
           </Button>
         )}
       </header>
+
+      <div>
+        <a
+          href={invoicePdfUrl(workspaceId, invoice.id)}
+          className="inline-flex h-10 items-center gap-2 rounded-control border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-sunken"
+        >
+          <Download className="size-4" aria-hidden="true" />
+          Download PDF
+        </a>
+      </div>
 
       <Card title="Details">
         <dl className="grid gap-4 text-sm sm:grid-cols-3">

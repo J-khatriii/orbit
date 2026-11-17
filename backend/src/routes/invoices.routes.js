@@ -18,5 +18,6 @@ router.patch("/:invoiceId", validate(updateInvoiceSchema), invoicesController.up
 router.post("/:invoiceId/send", invoicesController.sendInvoice);
 router.post("/:invoiceId/void", invoicesController.voidInvoice);
 router.delete("/:invoiceId", invoicesController.deleteInvoice);
+router.get("/:invoiceId/pdf", invoicesController.downloadPdf);
 
 export default router;

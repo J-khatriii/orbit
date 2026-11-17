@@ -4,6 +4,7 @@ import * as invoicesRepository from "../repositories/invoices.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { toInvoice } from "./serializers.js";
+import { renderInvoicePdf } from "../lib/invoicePdf.js";
 
 const invalid = (fields) => {
   return new AppError(400, "VALIDATION_ERROR", "Check the highlighted fields", { fields });
@@ -297,4 +298,31 @@ export const deleteInvoice = async ({ workspaceId, invoiceId }) => {
 
     await invoicesRepository.remove(trx, { workspaceId, id: locked.id });
   });
+};
+
+// The invoice as a PDF, plus the name to save it under.
+export const getInvoicePdf = async ({ workspaceId, invoiceId }) => {
+  const row = await loadInvoice(db, workspaceId, invoiceId);
+  const [items, client, workspace] = await Promise.all([
+    invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id }),
+    invoicesRepository.findBillTo(db, { workspaceId, clientId: row.client_id }),
+    invoicesRepository.findWorkspace(db, { workspaceId }),
+  ]);
+  const invoice = toInvoice(row, items);
+  const pdf = await renderInvoicePdf({
+    invoice,
+    items: invoice.items,
+    client: {
+      companyName: client.company_name,
+      billingAddress: client.billing_address,
+      billingEmail: client.billing_email,
+      taxId: client.tax_id,
+    },
+    issuer: { name: workspace.name },
+  });
+
+  return {
+    pdf,
+    filename: invoice.label ? `${invoice.label}.pdf` : `draft-${row.id.slice(0, 8)}.pdf`,
+  };
 };

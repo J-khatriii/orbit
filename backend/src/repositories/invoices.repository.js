@@ -142,3 +142,14 @@ export const nextNumber = async (executor, { workspaceId }) => {
 
   return result.rows[0].last_number;
 };
+
+// What the PDF needs about who is being billed, and who is billing.
+export const findBillTo = async (executor, { workspaceId, clientId }) => {
+  return executor("clients")
+    .where({ workspace_id: workspaceId, id: clientId })
+    .first(["company_name", "billing_address", "billing_email", "tax_id"]);
+};
+
+export const findWorkspace = async (executor, { workspaceId }) => {
+  return executor("workspaces").where({ id: workspaceId }).first(["name"]);
+};

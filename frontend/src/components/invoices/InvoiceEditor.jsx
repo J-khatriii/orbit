@@ -20,6 +20,7 @@ import {
 import { useProjects } from "../../features/projects/useProjects.js";
 import { fieldErrorsOf } from "../../lib/api.js";
 import { formatMoney } from "../../lib/money.js";
+import { invoicePdfUrl } from "../../features/invoices/invoicesApi.js";
 
 // The client's active projects, the same list the client's Projects tab shows.
 const PROJECT_FILTERS = { view: "active", sort: "due", order: "asc", page: 1, pageSize: 100 };
@@ -185,6 +186,20 @@ const InvoiceEditor = ({ workspaceId, client, invoice, defaultCurrency }) => {
         </h1>
         <p className="mt-1 text-sm text-ink-soft">for {client.companyName}</p>
       </header>
+
+      {invoice && (
+        <p className="text-sm text-ink-soft">
+          <a
+            href={invoicePdfUrl(workspaceId, invoice.id, true)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-brand-700 hover:underline"
+          >
+            Preview PDF
+          </a>{" "}
+          (shows the last saved draft)
+        </p>
+      )}
 
       <FormError message={formError} />
 

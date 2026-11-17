@@ -1,9 +1,16 @@
-import { api } from "../../lib/api.js";
+import { BASE_URL, api } from "../../lib/api.js";
 
 export const PAGE_SIZE = 50;
 
 const invoicesUrl = (workspaceId) => {
   return `/workspaces/${workspaceId}/invoices`;
+};
+
+// A plain link the browser can open. The session cookie goes along with it.
+export const invoicePdfUrl = (workspaceId, invoiceId, inline = false) => {
+  const suffix = inline ? "?inline=1" : "";
+
+  return `${BASE_URL}${invoicesUrl(workspaceId)}/${invoiceId}/pdf${suffix}`;
 };
 
 export const invoicesApi = {

@@ -1,4 +1,5 @@
 // Database rows use snake_case. The API speaks camelCase and never exposes password hashes.
+import { formatQuantity } from "../lib/money.js";
 
 export const toUser = (row) => {
   return {
@@ -321,5 +322,58 @@ export const toPortalAttachment = (row, previewable) => {
     contentType: row.content_type,
     size: row.size_bytes,
     previewable,
+  };
+};
+
+const formatInvoiceNumber = (number) => {
+  return `INV-${String(number).padStart(4, "0")}`;
+};
+
+export const toInvoiceItem = (row) => {
+  return {
+    id: row.id,
+    position: row.position,
+    description: row.description,
+    quantity: formatQuantity(row.quantity_milli),
+    unitPriceMinor: row.unit_price_minor,
+    lineTotalMinor: row.line_total_minor,
+  };
+};
+
+// Amounts are whole minor units (cents). Pass `items` to include the lines.
+export const toInvoice = (row, items) => {
+  const invoice = {
+    id: row.id,
+    number: row.number,
+    label: row.number === null ? null : formatInvoiceNumber(row.number),
+    status: row.status,
+    overdue: Boolean(row.overdue),
+    clientId: row.client_id,
+    clientName: row.client_name,
+    projectId: row.project_id,
+    projectName: row.project_name,
+    currency: row.currency,
+    issueDate: row.issue_date,
+    dueDate: row.due_date,
+    taxRateBps: row.tax_rate_bps,
+    subtotalMinor: row.subtotal_minor,
+    taxMinor: row.tax_minor,
+    totalMinor: row.total_minor,
+    notes: row.notes,
+    sentAt: row.sent_at,
+    voidedAt: row.voided_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+
+  if (!items) {
+    return invoice;
+  }
+
+  return {
+    ...invoice,
+    items: items.map((item) => {
+      return toInvoiceItem(item);
+    }),
   };
 };

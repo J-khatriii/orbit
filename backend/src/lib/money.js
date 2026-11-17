@@ -87,3 +87,13 @@ export const parseQuantityMilli = (value) => {
 
   return milli >= 1 && milli <= MAX_QUANTITY_MILLI ? milli : null;
 };
+
+// 1500 -> "1.5", 2000 -> "2", 1 -> "0.001".
+export const formatQuantity = (milli) => {
+  const whole = Math.floor(milli / 1000);
+  const fraction = String(milli % 1000)
+    .padStart(3, "0")
+    .replace(/0+$/, "");
+
+  return fraction ? `${whole}.${fraction}` : String(whole);
+};

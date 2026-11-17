@@ -3,6 +3,7 @@ import {
   calculateTotals,
   exponentOf,
   lineTotal,
+  formatQuantity,
   parseQuantityMilli,
   taxAmount,
 } from "../src/lib/money.js";
@@ -78,5 +79,12 @@ describe("money", () => {
     expect(exponentOf("USD")).toBe(2);
     expect(exponentOf("JPY")).toBe(0);
     expect(exponentOf("KWD")).toBe(3);
+  });
+
+  it("writes a quantity back as text", () => {
+    expect(formatQuantity(1500)).toBe("1.5");
+    expect(formatQuantity(2000)).toBe("2");
+    expect(formatQuantity(1)).toBe("0.001");
+    expect(formatQuantity(250)).toBe("0.25");
   });
 });

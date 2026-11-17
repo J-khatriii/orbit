@@ -377,3 +377,41 @@ export const toInvoice = (row, items) => {
     }),
   };
 };
+
+// What a client sees of an invoice: no creator, no internal ids, no dates of edits.
+export const toPortalInvoice = (row, items) => {
+  const invoice = {
+    id: row.id,
+    label: formatInvoiceNumber(row.number),
+    status: row.status,
+    overdue: Boolean(row.overdue),
+    clientId: row.client_id,
+    clientName: row.client_name,
+    projectName: row.project_name,
+    currency: row.currency,
+    issueDate: row.issue_date,
+    dueDate: row.due_date,
+    taxRateBps: row.tax_rate_bps,
+    subtotalMinor: row.subtotal_minor,
+    taxMinor: row.tax_minor,
+    totalMinor: row.total_minor,
+    notes: row.notes,
+    sentAt: row.sent_at,
+  };
+
+  if (!items) {
+    return invoice;
+  }
+
+  return {
+    ...invoice,
+    items: items.map((item) => {
+      return {
+        description: item.description,
+        quantity: formatQuantity(item.quantity_milli),
+        unitPriceMinor: item.unit_price_minor,
+        lineTotalMinor: item.line_total_minor,
+      };
+    }),
+  };
+};

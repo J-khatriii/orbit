@@ -1,5 +1,6 @@
 import * as portalService from "../services/portal.service.js";
 import { sendStoredFile } from "./sendStoredFile.js";
+import { sendPdf } from "./sendPdf.js";
 
 export const listProjects = async (req, res) => {
   const result = await portalService.listProjects({
@@ -70,4 +71,34 @@ export const downloadFile = async (req, res) => {
   });
 
   await sendStoredFile(req, res, row);
+};
+
+export const listInvoices = async (req, res) => {
+  const result = await portalService.listInvoices({
+    workspaceId: req.workspace.id,
+    userId: req.user.id,
+    query: req.validated.query,
+  });
+
+  res.json(result);
+};
+
+export const getInvoice = async (req, res) => {
+  const result = await portalService.getInvoice({
+    workspaceId: req.workspace.id,
+    userId: req.user.id,
+    invoiceId: req.params.invoiceId,
+  });
+
+  res.json(result);
+};
+
+export const downloadInvoicePdf = async (req, res) => {
+  const result = await portalService.getInvoicePdf({
+    workspaceId: req.workspace.id,
+    userId: req.user.id,
+    invoiceId: req.params.invoiceId,
+  });
+
+  sendPdf(req, res, result);
 };

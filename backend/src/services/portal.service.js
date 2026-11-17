@@ -10,11 +10,14 @@ import { attachmentsByMessage, insertAttachments } from "./messageAttachments.js
 import {
   toPortalClient,
   toPortalFile,
+  toPortalInvoice,
   toPortalMessage,
   toPortalProject,
   toPortalTask,
   toPortalAttachment,
 } from "./serializers.js";
+import * as invoicesRepository from "../repositories/invoices.repository.js";
+import * as invoiceService from "./invoice.service.js";
 
 export const listProjects = async ({ workspaceId, userId }) => {
   const clientIds = await listAccessibleClientIds(workspaceId, userId);
@@ -219,4 +222,65 @@ export const getFile = async ({ workspaceId, userId, fileId }) => {
   }
 
   return row;
+};
+
+export const listInvoices = async ({ workspaceId, userId, query }) => {
+  const accessible = await listAccessibleClientIds(workspaceId, userId);
+  // A client filter can only narrow what the person already has access to.
+  const clientIds = query.clientId
+    ? accessible.filter((id) => {
+        return id === query.clientId;
+      })
+    : accessible;
+
+  if (clientIds.length === 0) {
+    return { invoices: [], page: query.page, pageSize: query.pageSize, total: 0 };
+  }
+
+  const filters = { workspaceId, clientIds };
+  const [rows, total] = await Promise.all([
+    portalRepository.listInvoices(db, {
+      ...filters,
+      limit: query.pageSize,
+      offset: (query.page - 1) * query.pageSize,
+    }),
+    portalRepository.countInvoices(db, filters),
+  ]);
+
+  return {
+    invoices: rows.map((row) => {
+      return toPortalInvoice(row);
+    }),
+    page: query.page,
+    pageSize: query.pageSize,
+    total,
+  };
+};
+
+// The same answer whether the invoice doesn't exist, is a draft, or belongs to someone else.
+const loadVisibleInvoice = async (workspaceId, userId, invoiceId) => {
+  const clientIds = await listAccessibleClientIds(workspaceId, userId);
+  const row =
+    clientIds.length > 0 && isUuid(invoiceId)
+      ? await portalRepository.findInvoice(db, { workspaceId, clientIds, invoiceId })
+      : undefined;
+
+  if (!row) {
+    throw new AppError(404, "INVOICE_NOT_FOUND", "Invoice not found");
+  }
+
+  return row;
+};
+
+export const getInvoice = async ({ workspaceId, userId, invoiceId }) => {
+  const row = await loadVisibleInvoice(workspaceId, userId, invoiceId);
+  const items = await invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id });
+
+  return { invoice: toPortalInvoice(row, items) };
+};
+
+export const getInvoicePdf = async ({ workspaceId, userId, invoiceId }) => {
+  const row = await loadVisibleInvoice(workspaceId, userId, invoiceId);
+
+  return invoiceService.getInvoicePdf({ workspaceId, invoiceId: row.id });
 };

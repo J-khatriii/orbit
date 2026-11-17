@@ -102,3 +102,9 @@ export const listInvoicesSchema = z.object({
   clientId: uuid("Choose a client").optional(),
   status: z.enum(["draft", "sent", "paid", "void", "overdue"]).optional(),
 });
+
+export const portalListInvoicesSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(50),
+  clientId: uuid("Choose a client").optional(),
+});

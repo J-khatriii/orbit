@@ -38,6 +38,9 @@ export const invoicesApi = {
   send: ({ workspaceId, invoiceId }) => {
     return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/send`);
   },
+  email: ({ workspaceId, invoiceId }) => {
+    return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/email`);
+  },
   markVoid: ({ workspaceId, invoiceId }) => {
     return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/void`);
   },

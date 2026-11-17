@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Mail } from "lucide-react";
 import InvoiceStatusBadge from "./InvoiceStatusBadge.jsx";
 import { Button, Card, Modal, useToast } from "../ui/index.js";
-import { useVoidInvoice } from "../../features/invoices/useInvoiceMutations.js";
+import { useEmailInvoice, useVoidInvoice } from "../../features/invoices/useInvoiceMutations.js";
 import { formatDay } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
 import { invoicePdfUrl } from "../../features/invoices/invoicesApi.js";
 
+const formatSentTime = (isoTime) => {
+  return new Date(isoTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+
+const emailedLine = (invoice) => {
+  if (!invoice.lastEmailedAt) {
+    return "Not emailed to the client yet.";
+  }
+
+  const times = invoice.emailCount === 1 ? "1 time" : `${invoice.emailCount} times`;
+
+  return `Last emailed ${formatSentTime(invoice.lastEmailedAt)} (${times}).`;
+};
+
 const InvoiceView = ({ workspaceId, invoice }) => {
   const toast = useToast();
   const voidInvoice = useVoidInvoice();
+  const emailInvoice = useEmailInvoice();
   const [confirming, setConfirming] = useState(false);
 
   const handleVoid = async () => {
@@ -20,6 +35,20 @@ const InvoiceView = ({ workspaceId, invoice }) => {
     try {
       await voidInvoice.mutateAsync({ workspaceId, invoiceId: invoice.id });
       toast.show(`${invoice.label} was voided.`);
+    } catch (error) {
+      toast.show(error.message);
+    }
+  };
+
+  const handleEmail = async () => {
+    try {
+      const result = await emailInvoice.mutateAsync({ workspaceId, invoiceId: invoice.id });
+
+      toast.show(
+        result.emailed === 1
+          ? "Invoice emailed to 1 person."
+          : `Invoice emailed to ${result.emailed} people.`,
+      );
     } catch (error) {
       toast.show(error.message);
     }
@@ -48,18 +77,27 @@ const InvoiceView = ({ workspaceId, invoice }) => {
           <div className="mt-2">
             <InvoiceStatusBadge invoice={invoice} />
           </div>
+          {invoice.status === "sent" && (
+            <p className="mt-2 text-xs text-ink-muted">{emailedLine(invoice)}</p>
+          )}
         </div>
 
         {invoice.status === "sent" && (
-          <Button
-            variant="secondary"
-            loading={voidInvoice.isPending}
-            onClick={() => {
-              setConfirming(true);
-            }}
-          >
-            Void invoice
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" loading={emailInvoice.isPending} onClick={handleEmail}>
+              <Mail className="size-4" aria-hidden="true" />
+              {invoice.emailCount > 0 ? "Resend email" : "Email client"}
+            </Button>
+            <Button
+              variant="secondary"
+              loading={voidInvoice.isPending}
+              onClick={() => {
+                setConfirming(true);
+              }}
+            >
+              Void invoice
+            </Button>
+          </div>
         )}
       </header>
 

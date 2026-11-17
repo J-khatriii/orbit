@@ -64,3 +64,14 @@ export const useDeleteInvoice = () => {
     },
   });
 };
+
+export const useEmailInvoice = () => {
+  const refresh = useRefresh();
+
+  return useMutation({
+    mutationFn: invoicesApi.email,
+    onSuccess: (data, variables) => {
+      return refresh(variables);
+    },
+  });
+};

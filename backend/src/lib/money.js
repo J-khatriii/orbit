@@ -97,3 +97,24 @@ export const formatQuantity = (milli) => {
 
   return fraction ? `${whole}.${fraction}` : String(whole);
 };
+
+// 5000 USD cents -> "USD 50.00". The currency code, not a symbol, so it reads the same in any
+// font and any language. Used where a symbol could be lost, like PDFs.
+export const formatMinor = (minor, currency) => {
+  const exponent = exponentOf(currency);
+  const amount = minor / 10 ** exponent;
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      currencyDisplay: "code",
+      minimumFractionDigits: exponent,
+      maximumFractionDigits: exponent,
+    })
+      .format(amount)
+      .replace(/\u00A0/g, " ");
+  } catch {
+    return `${currency} ${amount.toFixed(exponent)}`;
+  }
+};

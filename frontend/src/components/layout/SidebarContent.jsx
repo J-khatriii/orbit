@@ -35,6 +35,12 @@ const NAV = [
     icon: Folder,
     hideFor: ["owner", "admin", "member"],
   },
+  {
+    label: "Invoices",
+    to: "/portal/invoices",
+    icon: Receipt,
+    hideFor: ["owner", "admin", "member"],
+  },
   { label: "Approvals", icon: CircleCheck, phase: 6 },
   { label: "Invoices", to: "/invoices", icon: Receipt, hideFor: ["member", "client"] },
   { label: "Templates", to: "/templates", icon: ClipboardList, hideFor: ["client"] },

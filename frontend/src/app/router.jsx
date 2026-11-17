@@ -29,6 +29,8 @@ import PortalFilesPage from "../pages/PortalFilesPage.jsx";
 import InvoicesPage from "../pages/InvoicesPage.jsx";
 import InvoicePage from "../pages/InvoicePage.jsx";
 import NewInvoicePage from "../pages/NewInvoicePage.jsx";
+import PortalInvoicesPage from "../pages/PortalInvoicesPage.jsx";
+import PortalInvoicePage from "../pages/PortalInvoicePage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -117,6 +119,16 @@ export const router = createBrowserRouter([
                 path: "portal/files",
                 element: <PortalFilesPage />,
                 handle: { title: "Files" },
+              },
+              {
+                path: "portal/invoices",
+                element: <PortalInvoicesPage />,
+                handle: { title: "Invoices" },
+              },
+              {
+                path: "portal/invoices/:invoiceId",
+                element: <PortalInvoicePage />,
+                handle: { title: "Invoice" },
               },
               {
                 path: "notifications",

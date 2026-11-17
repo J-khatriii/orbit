@@ -3,7 +3,7 @@ import InvoiceStatusBadge from "./InvoiceStatusBadge.jsx";
 import { formatDay } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
 
-const InvoiceList = ({ invoices, showClient }) => {
+const InvoiceList = ({ invoices, showClient, basePath = "/invoices" }) => {
   return (
     <ul className="divide-y divide-line">
       {invoices.map((invoice) => {
@@ -11,7 +11,7 @@ const InvoiceList = ({ invoices, showClient }) => {
           <li key={invoice.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
             <div className="min-w-40 flex-1">
               <Link
-                to={`/invoices/${invoice.id}`}
+                to={`${basePath}/${invoice.id}`}
                 className="text-sm font-medium text-ink hover:text-brand-700 hover:underline"
               >
                 {invoice.label ?? "Draft invoice"}

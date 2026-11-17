@@ -90,6 +90,9 @@ export const validate = (values) => {
   if (!values.clientId) {
     fields.clientId = "Choose a client";
   }
+  if (!/^[A-Z]{3}$/.test(values.currency)) {
+    fields.currency = "Use a 3-letter code, like USD";
+  }
   if (!values.issueDate) {
     fields.issueDate = "Choose an issue date";
   }

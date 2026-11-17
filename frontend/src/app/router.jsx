@@ -26,6 +26,9 @@ import PortalProjectPage from "../pages/PortalProjectPage.jsx";
 import PortalMessagesPage from "../pages/PortalMessagesPage.jsx";
 import NotificationsPage from "../pages/NotificationsPage.jsx";
 import PortalFilesPage from "../pages/PortalFilesPage.jsx";
+import InvoicesPage from "../pages/InvoicesPage.jsx";
+import InvoicePage from "../pages/InvoicePage.jsx";
+import NewInvoicePage from "../pages/NewInvoicePage.jsx";
 
 // `handle.title` is what the topbar shows in the breadcrumb.
 export const router = createBrowserRouter([
@@ -88,6 +91,17 @@ export const router = createBrowserRouter([
               },
               { path: "my-tasks", element: <MyTasksPage />, handle: { title: "My tasks" } },
               { path: "templates", element: <TemplatesPage />, handle: { title: "Templates" } },
+              { path: "invoices", element: <InvoicesPage />, handle: { title: "Invoices" } },
+              {
+                path: "invoices/new",
+                element: <NewInvoicePage />,
+                handle: { title: "New invoice" },
+              },
+              {
+                path: "invoices/:invoiceId",
+                element: <InvoicePage />,
+                handle: { title: "Invoice" },
+              },
               { path: "portal", element: <PortalPage />, handle: { title: "My projects" } },
               {
                 path: "portal/projects/:projectId",

@@ -102,3 +102,33 @@ export const reviewRequestedEmail = ({ name, taskTitle, projectName, workspaceNa
     }),
   };
 };
+
+const formatDueDate = (isoDay) => {
+  const [year, month, day] = isoDay.split("-").map(Number);
+
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
+
+export const invoiceEmail = ({ name, workspaceName, label, amount, dueDate, url, resend }) => {
+  const due = formatDueDate(dueDate);
+
+  return {
+    subject: resend
+      ? `Reminder: invoice ${label} from ${workspaceName}`
+      : `Invoice ${label} from ${workspaceName}`,
+    ...layout({
+      heading: resend ? `Reminder: invoice ${label}` : `Invoice ${label}`,
+      intro: resend
+        ? `Hi ${name}, here is a reminder about invoice ${label} from ${workspaceName} for ${amount}, due ${due}. You can view it and download the PDF in your portal.`
+        : `Hi ${name}, ${workspaceName} sent you an invoice for ${amount}, due ${due}. You can view it and download the PDF in your portal.`,
+      buttonLabel: "View invoice",
+      url,
+      outro: `You're receiving this because you have access to ${workspaceName} on Orbit.`,
+    }),
+  };
+};

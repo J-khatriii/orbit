@@ -74,3 +74,12 @@ export const downloadPdf = async (req, res) => {
 
   sendPdf(req, res, result);
 };
+
+export const emailInvoice = async (req, res) => {
+  const result = await invoiceService.emailInvoice({
+    workspaceId: req.workspace.id,
+    invoiceId: req.params.invoiceId,
+  });
+
+  res.json(result);
+};

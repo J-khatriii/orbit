@@ -16,6 +16,7 @@ router.post("/", validate(createInvoiceSchema), invoicesController.createInvoice
 router.get("/:invoiceId", invoicesController.getInvoice);
 router.patch("/:invoiceId", validate(updateInvoiceSchema), invoicesController.updateInvoice);
 router.post("/:invoiceId/send", invoicesController.sendInvoice);
+router.post("/:invoiceId/email", invoicesController.emailInvoice);
 router.post("/:invoiceId/void", invoicesController.voidInvoice);
 router.delete("/:invoiceId", invoicesController.deleteInvoice);
 router.get("/:invoiceId/pdf", invoicesController.downloadPdf);

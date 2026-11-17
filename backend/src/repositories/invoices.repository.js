@@ -17,6 +17,8 @@ const columns = (executor) => {
     "invoices.notes",
     "invoices.sent_at",
     "invoices.voided_at",
+    "invoices.last_emailed_at",
+    "invoices.email_count",
     "invoices.created_at",
     "invoices.updated_at",
     "clients.company_name as client_name",
@@ -152,4 +154,14 @@ export const findBillTo = async (executor, { workspaceId, clientId }) => {
 
 export const findWorkspace = async (executor, { workspaceId }) => {
   return executor("workspaces").where({ id: workspaceId }).first(["name"]);
+};
+
+// One more time the invoice has gone out by email.
+export const recordEmailed = async (executor, { workspaceId, id }) => {
+  await executor("invoices")
+    .where({ workspace_id: workspaceId, id })
+    .update({
+      last_emailed_at: executor.fn.now(),
+      email_count: executor.raw("email_count + 1"),
+    });
 };

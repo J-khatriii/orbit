@@ -5,6 +5,8 @@ import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
 import { toInvoice } from "./serializers.js";
 import { renderInvoicePdf } from "../lib/invoicePdf.js";
+import { logger } from "../lib/logger.js";
+import { deliverInvoice } from "./invoiceEmail.service.js";
 
 const invalid = (fields) => {
   return new AppError(400, "VALIDATION_ERROR", "Check the highlighted fields", { fields });
@@ -89,6 +91,17 @@ const itemRows = (workspaceId, invoiceId, items, lineTotals) => {
   });
 };
 
+const EMAIL_COOLDOWN_MS = 60 * 1000;
+
+// The team's view of an invoice: the shared fields plus when it was last emailed.
+const present = (row, items) => {
+  return {
+    ...toInvoice(row, items),
+    lastEmailedAt: row.last_emailed_at,
+    emailCount: row.email_count,
+  };
+};
+
 export const listInvoices = async ({ workspaceId, query }) => {
   const filters = { workspaceId, clientId: query.clientId, status: query.status };
   const [rows, total] = await Promise.all([
@@ -102,7 +115,7 @@ export const listInvoices = async ({ workspaceId, query }) => {
 
   return {
     invoices: rows.map((row) => {
-      return toInvoice(row);
+      return present(row);
     }),
     page: query.page,
     pageSize: query.pageSize,
@@ -114,7 +127,7 @@ export const getInvoice = async ({ workspaceId, invoiceId }) => {
   const row = await loadInvoice(db, workspaceId, invoiceId);
   const items = await invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id });
 
-  return { invoice: toInvoice(row, items) };
+  return { invoice: present(row, items) };
 };
 
 export const createInvoice = async ({ workspaceId, userId, input }) => {
@@ -231,7 +244,8 @@ export const updateInvoice = async ({ workspaceId, invoiceId, input }) => {
   return getInvoice({ workspaceId, invoiceId: id });
 };
 
-// Draft -> sent. The invoice gets its number here, so numbers have no gaps.
+// Draft -> sent. The invoice gets its number here, so numbers have no gaps. Once it is saved,
+// the client's portal users are emailed. A mail problem is logged and never undoes the send.
 export const sendInvoice = async ({ workspaceId, invoiceId }) => {
   const id = await db.transaction(async (trx) => {
     const locked = await lockInvoice(trx, workspaceId, invoiceId);
@@ -259,7 +273,19 @@ export const sendInvoice = async ({ workspaceId, invoiceId }) => {
     return locked.id;
   });
 
-  return getInvoice({ workspaceId, invoiceId: id });
+  let emailed = 0;
+
+  try {
+    const result = await deliverInvoice({ workspaceId, invoiceId: id, resend: false });
+
+    emailed = result.sent;
+  } catch (error) {
+    logger.error({ err: error, invoiceId: id }, "invoice email failed");
+  }
+
+  const saved = await getInvoice({ workspaceId, invoiceId: id });
+
+  return { ...saved, emailed };
 };
 
 export const voidInvoice = async ({ workspaceId, invoiceId }) => {
@@ -325,4 +351,44 @@ export const getInvoicePdf = async ({ workspaceId, invoiceId }) => {
     pdf,
     filename: invoice.label ? `${invoice.label}.pdf` : `draft-${row.id.slice(0, 8)}.pdf`,
   };
+};
+
+// Emails a sent invoice to the client's portal users again.
+export const emailInvoice = async ({ workspaceId, invoiceId }) => {
+  const row = await loadInvoice(db, workspaceId, invoiceId);
+
+  if (row.status !== "sent") {
+    throw new AppError(409, "INVOICE_NOT_EMAILABLE", "Only a sent invoice can be emailed");
+  }
+  if (
+    row.last_emailed_at &&
+    Date.now() - new Date(row.last_emailed_at).getTime() < EMAIL_COOLDOWN_MS
+  ) {
+    throw new AppError(
+      429,
+      "INVOICE_EMAILED_RECENTLY",
+      "This invoice was just emailed. Wait a minute before sending it again.",
+    );
+  }
+
+  const result = await deliverInvoice({
+    workspaceId,
+    invoiceId: row.id,
+    resend: row.email_count > 0,
+  });
+
+  if (result.recipients === 0) {
+    throw new AppError(
+      409,
+      "NO_PORTAL_USERS",
+      "Nobody has portal access to this client yet. Give someone access first.",
+    );
+  }
+  if (result.sent === 0) {
+    throw new AppError(502, "EMAIL_FAILED", "We couldn't send the email. Try again in a moment.");
+  }
+
+  const saved = await getInvoice({ workspaceId, invoiceId: row.id });
+
+  return { ...saved, emailed: result.sent };
 };

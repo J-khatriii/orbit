@@ -19,12 +19,17 @@ const columns = (executor) => {
     "invoices.voided_at",
     "invoices.last_emailed_at",
     "invoices.email_count",
+    "invoices.paid_at",
     "invoices.created_at",
     "invoices.updated_at",
     "clients.company_name as client_name",
     "projects.name as project_name",
     // "Overdue" is worked out, never stored.
     executor.raw("(invoices.status = 'sent' AND invoices.due_date < CURRENT_DATE) AS overdue"),
+    // Always worked out from the payments, never stored.
+    executor.raw(
+      "COALESCE((SELECT SUM(p.amount_minor) FROM invoice_payments p WHERE p.invoice_id = invoices.id), 0)::bigint AS amount_paid_minor",
+    ),
   ];
 };
 
@@ -164,4 +169,37 @@ export const recordEmailed = async (executor, { workspaceId, id }) => {
       last_emailed_at: executor.fn.now(),
       email_count: executor.raw("email_count + 1"),
     });
+};
+
+export const listPayments = async (executor, { workspaceId, invoiceId }) => {
+  return executor("invoice_payments as p")
+    .leftJoin("users", "users.id", "p.recorded_by")
+    .where({ "p.workspace_id": workspaceId, "p.invoice_id": invoiceId })
+    .orderBy([
+      { column: "p.paid_on", order: "asc" },
+      { column: "p.created_at", order: "asc" },
+    ])
+    .select([
+      "p.id",
+      "p.amount_minor",
+      "p.paid_on",
+      "p.method",
+      "p.reference",
+      "p.created_at",
+      "users.name as recorded_by_name",
+    ]);
+};
+
+export const findPayment = async (executor, { workspaceId, invoiceId, paymentId }) => {
+  return executor("invoice_payments")
+    .where({ workspace_id: workspaceId, invoice_id: invoiceId, id: paymentId })
+    .first(["id"]);
+};
+
+export const insertPayment = async (executor, values) => {
+  await executor("invoice_payments").insert(values);
+};
+
+export const removePayment = async (executor, { workspaceId, id }) => {
+  await executor("invoice_payments").where({ workspace_id: workspaceId, id }).del();
 };

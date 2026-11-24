@@ -83,3 +83,24 @@ export const emailInvoice = async (req, res) => {
 
   res.json(result);
 };
+
+export const recordPayment = async (req, res) => {
+  const result = await invoiceService.recordPayment({
+    workspaceId: req.workspace.id,
+    invoiceId: req.params.invoiceId,
+    userId: req.user.id,
+    input: req.validated.body,
+  });
+
+  res.status(201).json(result);
+};
+
+export const deletePayment = async (req, res) => {
+  const result = await invoiceService.deletePayment({
+    workspaceId: req.workspace.id,
+    invoiceId: req.params.invoiceId,
+    paymentId: req.params.paymentId,
+  });
+
+  res.json(result);
+};

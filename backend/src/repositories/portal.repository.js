@@ -141,6 +141,9 @@ const invoiceColumns = (executor) => {
     "clients.company_name as client_name",
     "projects.name as project_name",
     executor.raw("(invoices.status = 'sent' AND invoices.due_date < CURRENT_DATE) AS overdue"),
+    executor.raw(
+      "COALESCE((SELECT SUM(p.amount_minor) FROM invoice_payments p WHERE p.invoice_id = invoices.id), 0)::bigint AS amount_paid_minor",
+    ),
   ];
 };
 

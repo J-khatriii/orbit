@@ -30,7 +30,7 @@ export const deliverInvoice = async ({ workspaceId, invoiceId, resend }) => {
           name: user.name,
           workspaceName: workspace.name,
           label,
-          amount: formatMinor(row.total_minor, row.currency),
+          amount: formatMinor(row.total_minor - row.amount_paid_minor, row.currency),
           dueDate: row.due_date,
           url: `${env.APP_URL}/portal/invoices/${row.id}`,
           resend,

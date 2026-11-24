@@ -3,7 +3,7 @@ import { calculateTotals } from "../lib/money.js";
 import * as invoicesRepository from "../repositories/invoices.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { isUuid } from "../utils/isUuid.js";
-import { toInvoice } from "./serializers.js";
+import { toInvoice, toPayment } from "./serializers.js";
 import { renderInvoicePdf } from "../lib/invoicePdf.js";
 import { logger } from "../lib/logger.js";
 import { deliverInvoice } from "./invoiceEmail.service.js";
@@ -99,6 +99,9 @@ const present = (row, items) => {
     ...toInvoice(row, items),
     lastEmailedAt: row.last_emailed_at,
     emailCount: row.email_count,
+    paidAt: row.paid_at,
+    amountPaidMinor: row.amount_paid_minor,
+    balanceMinor: row.total_minor - row.amount_paid_minor,
   };
 };
 
@@ -125,9 +128,19 @@ export const listInvoices = async ({ workspaceId, query }) => {
 
 export const getInvoice = async ({ workspaceId, invoiceId }) => {
   const row = await loadInvoice(db, workspaceId, invoiceId);
-  const items = await invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id });
+  const [items, payments] = await Promise.all([
+    invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id }),
+    invoicesRepository.listPayments(db, { workspaceId, invoiceId: row.id }),
+  ]);
 
-  return { invoice: present(row, items) };
+  return {
+    invoice: {
+      ...present(row, items),
+      payments: payments.map((payment) => {
+        return toPayment(payment);
+      }),
+    },
+  };
 };
 
 export const createInvoice = async ({ workspaceId, userId, input }) => {
@@ -299,6 +312,16 @@ export const voidInvoice = async ({ workspaceId, invoiceId }) => {
       "Only a sent invoice can be voided. Delete a draft instead.",
     );
 
+    const current = await loadInvoice(trx, workspaceId, locked.id);
+
+    if (current.amount_paid_minor > 0) {
+      throw new AppError(
+        409,
+        "INVOICE_HAS_PAYMENTS",
+        "This invoice has payments recorded. Delete them before voiding it.",
+      );
+    }
+
     await invoicesRepository.update(trx, {
       workspaceId,
       id: locked.id,
@@ -391,4 +414,90 @@ export const emailInvoice = async ({ workspaceId, invoiceId }) => {
   const saved = await getInvoice({ workspaceId, invoiceId: row.id });
 
   return { ...saved, emailed: result.sent };
+};
+
+// Money received for a sent invoice. The invoice row stays locked while the balance is
+// checked, so two payments at once can't add up to more than is owed. When the balance
+// reaches zero the invoice becomes paid.
+export const recordPayment = async ({ workspaceId, invoiceId, userId, input }) => {
+  const id = await db.transaction(async (trx) => {
+    const locked = await lockInvoice(trx, workspaceId, invoiceId);
+
+    if (locked.status === "paid") {
+      throw new AppError(409, "INVOICE_ALREADY_PAID", "This invoice is already paid in full");
+    }
+
+    requireStatus(
+      locked,
+      "sent",
+      "INVOICE_NOT_PAYABLE",
+      "Payments can only be recorded on a sent invoice",
+    );
+
+    const current = await loadInvoice(trx, workspaceId, locked.id);
+    const balance = current.total_minor - current.amount_paid_minor;
+
+    if (input.amountMinor > balance) {
+      throw invalid({ amountMinor: "That is more than the amount still due" });
+    }
+
+    await invoicesRepository.insertPayment(trx, {
+      workspace_id: workspaceId,
+      invoice_id: locked.id,
+      amount_minor: input.amountMinor,
+      paid_on: input.paidOn,
+      method: input.method,
+      reference: input.reference ?? null,
+      recorded_by: userId,
+    });
+
+    if (input.amountMinor === balance) {
+      await invoicesRepository.update(trx, {
+        workspaceId,
+        id: locked.id,
+        values: { status: "paid", paid_at: trx.fn.now() },
+      });
+    }
+
+    return locked.id;
+  });
+
+  return getInvoice({ workspaceId, invoiceId: id });
+};
+
+// Removes a payment, for example one entered by mistake. A paid invoice becomes sent again.
+export const deletePayment = async ({ workspaceId, invoiceId, paymentId }) => {
+  const id = await db.transaction(async (trx) => {
+    const locked = await lockInvoice(trx, workspaceId, invoiceId);
+
+    if (locked.status !== "sent" && locked.status !== "paid") {
+      throw new AppError(409, "INVOICE_NOT_PAYABLE", "This invoice has no payments to remove");
+    }
+
+    const payment = isUuid(paymentId)
+      ? await invoicesRepository.findPayment(trx, {
+          workspaceId,
+          invoiceId: locked.id,
+          paymentId,
+        })
+      : undefined;
+
+    if (!payment) {
+      throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment not found");
+    }
+
+    await invoicesRepository.removePayment(trx, { workspaceId, id: payment.id });
+
+    if (locked.status === "paid") {
+      await invoicesRepository.update(trx, {
+        workspaceId,
+        id: locked.id,
+        values: { status: "sent", paid_at: null },
+      });
+    }
+
+    return locked.id;
+  });
+
+  return getInvoice({ workspaceId, invoiceId: id });
 };

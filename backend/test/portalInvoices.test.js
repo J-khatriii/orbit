@@ -99,6 +99,8 @@ describe("portal invoices", () => {
   it("shows nothing internal about an invoice", async () => {
     const { workspaceId, person, sent } = await setup();
     const listKeys = [
+      "amountPaidMinor",
+      "balanceMinor",
       "clientId",
       "clientName",
       "currency",

@@ -108,3 +108,25 @@ export const portalListInvoicesSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(50),
   clientId: uuid("Choose a client").optional(),
 });
+
+export const PAYMENT_METHODS = ["bank_transfer", "cash", "card", "cheque", "other"];
+
+const reference = z
+  .string()
+  .trim()
+  .max(200, "Use at most 200 characters")
+  .transform((value) => {
+    return value === "" ? null : value;
+  })
+  .nullable();
+
+export const createPaymentSchema = z.object({
+  amountMinor: z
+    .number()
+    .int("Use a whole number of cents")
+    .min(1, "Enter an amount above zero")
+    .max(MAX_AMOUNT_MINOR, "That amount is too large"),
+  paidOn: isoDate,
+  method: z.enum(PAYMENT_METHODS, { error: "Choose how it was paid" }),
+  reference: reference.optional(),
+});

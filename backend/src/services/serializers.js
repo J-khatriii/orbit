@@ -397,6 +397,8 @@ export const toPortalInvoice = (row, items) => {
     totalMinor: row.total_minor,
     notes: row.notes,
     sentAt: row.sent_at,
+    amountPaidMinor: row.amount_paid_minor,
+    balanceMinor: row.total_minor - row.amount_paid_minor,
   };
 
   if (!items) {
@@ -413,5 +415,17 @@ export const toPortalInvoice = (row, items) => {
         lineTotalMinor: item.line_total_minor,
       };
     }),
+  };
+};
+
+export const toPayment = (row) => {
+  return {
+    id: row.id,
+    amountMinor: row.amount_minor,
+    paidOn: row.paid_on,
+    method: row.method,
+    reference: row.reference,
+    recordedByName: row.recorded_by_name,
+    createdAt: row.created_at,
   };
 };

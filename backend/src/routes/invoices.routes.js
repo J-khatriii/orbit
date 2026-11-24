@@ -2,6 +2,7 @@ import { Router } from "express";
 import { validate } from "../middleware/validate.js";
 import {
   createInvoiceSchema,
+  createPaymentSchema,
   listInvoicesSchema,
   updateInvoiceSchema,
 } from "../schemas/invoices.schemas.js";
@@ -18,6 +19,12 @@ router.patch("/:invoiceId", validate(updateInvoiceSchema), invoicesController.up
 router.post("/:invoiceId/send", invoicesController.sendInvoice);
 router.post("/:invoiceId/email", invoicesController.emailInvoice);
 router.post("/:invoiceId/void", invoicesController.voidInvoice);
+router.post(
+  "/:invoiceId/payments",
+  validate(createPaymentSchema),
+  invoicesController.recordPayment,
+);
+router.delete("/:invoiceId/payments/:paymentId", invoicesController.deletePayment);
 router.delete("/:invoiceId", invoicesController.deleteInvoice);
 router.get("/:invoiceId/pdf", invoicesController.downloadPdf);
 

@@ -22,9 +22,16 @@ const InvoiceList = ({ invoices, showClient, basePath = "/invoices" }) => {
               </p>
             </div>
             <InvoiceStatusBadge invoice={invoice} />
-            <p className="w-28 text-right text-sm font-medium text-ink tabular-nums">
-              {formatMoney(invoice.totalMinor, invoice.currency)}
-            </p>
+            <div className="w-28 text-right tabular-nums">
+              <p className="text-sm font-medium text-ink">
+                {formatMoney(invoice.totalMinor, invoice.currency)}
+              </p>
+              {invoice.status === "sent" && invoice.amountPaidMinor > 0 && (
+                <p className="text-xs text-ink-muted">
+                  {formatMoney(invoice.balanceMinor, invoice.currency)} due
+                </p>
+              )}
+            </div>
           </li>
         );
       })}

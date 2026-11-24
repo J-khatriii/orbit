@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft, Download, Mail } from "lucide-react";
+import { ArrowLeft, Banknote, Download, Mail, Trash2 } from "lucide-react";
 import InvoiceStatusBadge from "./InvoiceStatusBadge.jsx";
+import RecordPaymentModal from "./RecordPaymentModal.jsx";
 import { Button, Card, Modal, useToast } from "../ui/index.js";
-import { useEmailInvoice, useVoidInvoice } from "../../features/invoices/useInvoiceMutations.js";
+import { METHOD_LABELS } from "../../features/invoices/constants.js";
+import {
+  useEmailInvoice,
+  useRemovePayment,
+  useVoidInvoice,
+} from "../../features/invoices/useInvoiceMutations.js";
 import { formatDay } from "../../lib/dates.js";
 import { formatMoney } from "../../lib/money.js";
 import { invoicePdfUrl } from "../../features/invoices/invoicesApi.js";
 
 const formatSentTime = (isoTime) => {
   return new Date(isoTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+
+const formatPaidDay = (isoTime) => {
+  return new Date(isoTime).toLocaleDateString(undefined, { dateStyle: "medium" });
 };
 
 const emailedLine = (invoice) => {
@@ -26,7 +36,12 @@ const InvoiceView = ({ workspaceId, invoice }) => {
   const toast = useToast();
   const voidInvoice = useVoidInvoice();
   const emailInvoice = useEmailInvoice();
+  const removePayment = useRemovePayment();
   const [confirming, setConfirming] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [removing, setRemoving] = useState(null);
+  const hasPayments = invoice.amountPaidMinor > 0;
+  const showPayments = invoice.status === "sent" || invoice.status === "paid";
 
   const handleVoid = async () => {
     // Close the dialog first, so the toast isn't hidden behind it.
@@ -49,6 +64,23 @@ const InvoiceView = ({ workspaceId, invoice }) => {
           ? "Invoice emailed to 1 person."
           : `Invoice emailed to ${result.emailed} people.`,
       );
+    } catch (error) {
+      toast.show(error.message);
+    }
+  };
+
+  const handleRemovePayment = async () => {
+    const payment = removing;
+
+    setRemoving(null);
+
+    try {
+      await removePayment.mutateAsync({
+        workspaceId,
+        invoiceId: invoice.id,
+        paymentId: payment.id,
+      });
+      toast.show("Payment removed.");
     } catch (error) {
       toast.show(error.message);
     }
@@ -80,16 +112,30 @@ const InvoiceView = ({ workspaceId, invoice }) => {
           {invoice.status === "sent" && (
             <p className="mt-2 text-xs text-ink-muted">{emailedLine(invoice)}</p>
           )}
+          {invoice.status === "paid" && invoice.paidAt && (
+            <p className="mt-2 text-xs text-ink-muted">
+              Paid in full on {formatPaidDay(invoice.paidAt)}.
+            </p>
+          )}
         </div>
 
         {invoice.status === "sent" && (
           <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => {
+                setPaying(true);
+              }}
+            >
+              <Banknote className="size-4" aria-hidden="true" />
+              Record payment
+            </Button>
             <Button variant="secondary" loading={emailInvoice.isPending} onClick={handleEmail}>
               <Mail className="size-4" aria-hidden="true" />
               {invoice.emailCount > 0 ? "Resend email" : "Email client"}
             </Button>
             <Button
               variant="secondary"
+              disabled={hasPayments}
               loading={voidInvoice.isPending}
               onClick={() => {
                 setConfirming(true);
@@ -164,14 +210,118 @@ const InvoiceView = ({ workspaceId, invoice }) => {
               {formatMoney(invoice.totalMinor, invoice.currency)}
             </dd>
           </div>
+          {hasPayments && (
+            <>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">Paid</dt>
+                <dd className="text-ink tabular-nums">
+                  {formatMoney(invoice.amountPaidMinor, invoice.currency)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4 text-base font-medium">
+                <dt className="text-ink">Balance due</dt>
+                <dd className="text-ink tabular-nums">
+                  {formatMoney(invoice.balanceMinor, invoice.currency)}
+                </dd>
+              </div>
+            </>
+          )}
         </dl>
       </Card>
+
+      {showPayments && (
+        <Card title="Payments">
+          {invoice.payments.length === 0 ? (
+            <p className="text-sm text-ink-soft">No payments recorded yet.</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {invoice.payments.map((payment) => {
+                const details = [
+                  payment.reference,
+                  payment.recordedByName ? `recorded by ${payment.recordedByName}` : "",
+                ].filter(Boolean);
+
+                return (
+                  <li key={payment.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+                    <div className="min-w-40 flex-1">
+                      <p className="text-sm text-ink">
+                        {METHOD_LABELS[payment.method]} on {formatDay(payment.paidOn)}
+                      </p>
+                      {details.length > 0 && (
+                        <p className="text-sm text-ink-soft">{details.join(", ")}</p>
+                      )}
+                    </div>
+                    <p className="w-28 text-right text-sm font-medium text-ink tabular-nums">
+                      {formatMoney(payment.amountMinor, invoice.currency)}
+                    </p>
+                    <button
+                      type="button"
+                      aria-label={`Remove the payment of ${formatMoney(payment.amountMinor, invoice.currency)}`}
+                      onClick={() => {
+                        setRemoving(payment);
+                      }}
+                      className="rounded-control p-2 text-ink-muted transition-colors hover:bg-sunken hover:text-clay-600"
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {invoice.status === "sent" && hasPayments && (
+            <p className="mt-3 text-xs text-ink-muted">
+              To void this invoice, remove its payments first.
+            </p>
+          )}
+        </Card>
+      )}
 
       {invoice.notes && (
         <Card title="Notes">
           <p className="text-sm whitespace-pre-line text-ink">{invoice.notes}</p>
         </Card>
       )}
+
+      {paying && (
+        <RecordPaymentModal
+          workspaceId={workspaceId}
+          invoice={invoice}
+          onClose={() => {
+            setPaying(false);
+          }}
+        />
+      )}
+
+      <Modal
+        open={removing !== null}
+        onClose={() => {
+          setRemoving(null);
+        }}
+        title="Remove this payment?"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setRemoving(null);
+              }}
+            >
+              Keep it
+            </Button>
+            <Button loading={removePayment.isPending} onClick={handleRemovePayment}>
+              Remove payment
+            </Button>
+          </>
+        }
+      >
+        {removing && (
+          <p className="text-sm text-ink-soft">
+            Remove the {formatMoney(removing.amountMinor, invoice.currency)} payment from{" "}
+            {formatDay(removing.paidOn)}? If the invoice was marked paid, it goes back to sent.
+          </p>
+        )}
+      </Modal>
 
       <Modal
         open={confirming}

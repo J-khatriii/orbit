@@ -4,6 +4,7 @@ export const STATUS_LABELS = {
   paid: "Paid",
   void: "Void",
   overdue: "Overdue",
+  partial: "Part paid",
 };
 
 // Badge tones: neutral, sage, clay, brand.
@@ -13,11 +14,20 @@ export const STATUS_TONES = {
   paid: "sage",
   void: "neutral",
   overdue: "clay",
+  partial: "brand",
 };
 
-// A sent invoice past its due date shows as "Overdue".
+// A sent invoice past its due date shows as "Overdue". One that has had a payment but is not
+// paid in full shows as "Part paid".
 export const displayStatus = (invoice) => {
-  return invoice.overdue ? "overdue" : invoice.status;
+  if (invoice.overdue) {
+    return "overdue";
+  }
+  if (invoice.status === "sent" && invoice.amountPaidMinor > 0) {
+    return "partial";
+  }
+
+  return invoice.status;
 };
 
 // The filters on the list page.
@@ -29,3 +39,15 @@ export const STATUS_FILTERS = [
   { value: "paid", label: "Paid" },
   { value: "void", label: "Void" },
 ];
+
+export const METHOD_LABELS = {
+  bank_transfer: "Bank transfer",
+  cash: "Cash",
+  card: "Card",
+  cheque: "Cheque",
+  other: "Other",
+};
+
+export const PAYMENT_METHODS = Object.entries(METHOD_LABELS).map(([value, label]) => {
+  return { value, label };
+});

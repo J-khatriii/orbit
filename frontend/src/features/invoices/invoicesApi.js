@@ -41,6 +41,12 @@ export const invoicesApi = {
   email: ({ workspaceId, invoiceId }) => {
     return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/email`);
   },
+  recordPayment: ({ workspaceId, invoiceId, input }) => {
+    return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/payments`, input);
+  },
+  removePayment: ({ workspaceId, invoiceId, paymentId }) => {
+    return api.delete(`${invoicesUrl(workspaceId)}/${invoiceId}/payments/${paymentId}`);
+  },
   markVoid: ({ workspaceId, invoiceId }) => {
     return api.post(`${invoicesUrl(workspaceId)}/${invoiceId}/void`);
   },

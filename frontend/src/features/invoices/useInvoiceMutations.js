@@ -75,3 +75,25 @@ export const useEmailInvoice = () => {
     },
   });
 };
+
+export const useRecordPayment = () => {
+  const refresh = useRefresh();
+
+  return useMutation({
+    mutationFn: invoicesApi.recordPayment,
+    onSuccess: (data, variables) => {
+      return refresh(variables);
+    },
+  });
+};
+
+export const useRemovePayment = () => {
+  const refresh = useRefresh();
+
+  return useMutation({
+    mutationFn: invoicesApi.removePayment,
+    onSuccess: (data, variables) => {
+      return refresh(variables);
+    },
+  });
+};

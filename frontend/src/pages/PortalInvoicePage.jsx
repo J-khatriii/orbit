@@ -134,6 +134,22 @@ const PortalInvoicePage = () => {
               {formatMoney(invoice.totalMinor, invoice.currency)}
             </dd>
           </div>
+          {invoice.amountPaidMinor > 0 && (
+            <>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">Paid</dt>
+                <dd className="text-ink tabular-nums">
+                  {formatMoney(invoice.amountPaidMinor, invoice.currency)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4 text-base font-medium">
+                <dt className="text-ink">Balance due</dt>
+                <dd className="text-ink tabular-nums">
+                  {formatMoney(invoice.balanceMinor, invoice.currency)}
+                </dd>
+              </div>
+            </>
+          )}
         </dl>
       </Card>
 

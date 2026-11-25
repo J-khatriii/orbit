@@ -186,6 +186,7 @@ export const listPayments = async (executor, { workspaceId, invoiceId }) => {
       "p.method",
       "p.reference",
       "p.created_at",
+      "p.source",
       "users.name as recorded_by_name",
     ]);
 };
@@ -193,7 +194,7 @@ export const listPayments = async (executor, { workspaceId, invoiceId }) => {
 export const findPayment = async (executor, { workspaceId, invoiceId, paymentId }) => {
   return executor("invoice_payments")
     .where({ workspace_id: workspaceId, invoice_id: invoiceId, id: paymentId })
-    .first(["id"]);
+    .first(["id", "source"]);
 };
 
 export const insertPayment = async (executor, values) => {
@@ -202,4 +203,16 @@ export const insertPayment = async (executor, values) => {
 
 export const removePayment = async (executor, { workspaceId, id }) => {
   await executor("invoice_payments").where({ workspace_id: workspaceId, id }).del();
+};
+
+// Inserts a payment unless one with the same external id already exists. Returns whether a
+// row was added, so a repeat delivery from Stripe is a harmless no-op.
+export const insertPaymentOnce = async (executor, values) => {
+  const rows = await executor("invoice_payments")
+    .insert(values)
+    .onConflict("external_id")
+    .ignore()
+    .returning("id");
+
+  return rows.length > 0;
 };

@@ -1,10 +1,13 @@
 import { env } from "../config/env.js";
 import { db } from "../db/knex.js";
-import { toStripeAmount } from "../lib/stripeAmounts.js";
+import { logger } from "../lib/logger.js";
+import { fromStripeAmount, toStripeAmount } from "../lib/stripeAmounts.js";
 import * as stripeConnect from "../lib/stripeConnect.js";
 import * as invoicesRepository from "../repositories/invoices.repository.js";
 import * as stripeAccountsRepository from "../repositories/stripeAccounts.repository.js";
 import { AppError } from "../utils/AppError.js";
+import { isUuid } from "../utils/isUuid.js";
+import * as invoiceService from "./invoice.service.js";
 import { toPortalInvoice } from "./serializers.js";
 
 const balanceOf = (invoice) => {
@@ -76,4 +79,91 @@ export const createCheckout = async ({ workspaceId, invoice }) => {
   });
 
   return { url };
+};
+
+const PAID_EVENTS = new Set([
+  "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+]);
+
+const ignore = (reason, details) => {
+  logger.warn(details, `stripe event ignored: ${reason}`);
+};
+
+// Turns a verified Stripe event into a recorded payment. Events we don't use, and anything
+// that doesn't add up, are logged and answered with success, so Stripe doesn't retry them.
+// A real failure (such as the database being down) throws, so Stripe does retry.
+export const handleStripeEvent = async (event) => {
+  if (Boolean(event.livemode) !== stripeConnect.LIVEMODE) {
+    ignore("wrong mode", { eventId: event.id });
+
+    return;
+  }
+  if (event.type === "checkout.session.async_payment_failed") {
+    logger.info({ eventId: event.id }, "a delayed online payment failed");
+
+    return;
+  }
+  if (!PAID_EVENTS.has(event.type)) {
+    return;
+  }
+
+  const session = event.data.object;
+
+  // A delayed payment method (such as a bank debit) completes the Checkout before the money
+  // arrives. The "async payment succeeded" event comes later.
+  if (session.payment_status !== "paid") {
+    return;
+  }
+
+  const workspaceId = session.metadata?.orbit_workspace_id;
+  const invoiceId = session.metadata?.orbit_invoice_id;
+
+  if (!isUuid(workspaceId) || !isUuid(invoiceId)) {
+    ignore("not an Orbit payment", { eventId: event.id });
+
+    return;
+  }
+
+  // Events from every connected agency arrive here. Only the account stored for this
+  // workspace may credit its invoices, whatever the metadata says.
+  const account = await stripeAccountsRepository.find(db, {
+    workspaceId,
+    livemode: Boolean(event.livemode),
+  });
+
+  if (!account || event.account !== account.stripe_account_id) {
+    ignore("account does not belong to the workspace", { eventId: event.id, workspaceId });
+
+    return;
+  }
+
+  const invoice = await invoicesRepository.findById(db, { workspaceId, id: invoiceId });
+
+  if (!invoice || String(session.currency).toUpperCase() !== invoice.currency) {
+    ignore("invoice or currency does not match", { eventId: event.id, workspaceId, invoiceId });
+
+    return;
+  }
+
+  const amountMinor = fromStripeAmount(session.amount_total, invoice.currency);
+
+  if (!Number.isInteger(amountMinor) || amountMinor <= 0) {
+    ignore("amount is not usable", { eventId: event.id, workspaceId, invoiceId });
+
+    return;
+  }
+
+  const externalId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? session.id);
+
+  await invoiceService.recordOnlinePayment({
+    workspaceId,
+    invoiceId,
+    amountMinor,
+    externalId,
+    paidOn: new Date(event.created * 1000).toISOString().slice(0, 10),
+  });
 };

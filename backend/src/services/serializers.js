@@ -398,7 +398,7 @@ export const toPortalInvoice = (row, items) => {
     notes: row.notes,
     sentAt: row.sent_at,
     amountPaidMinor: row.amount_paid_minor,
-    balanceMinor: row.total_minor - row.amount_paid_minor,
+    balanceMinor: Math.max(0, row.total_minor - row.amount_paid_minor),
   };
 
   if (!items) {
@@ -424,6 +424,7 @@ export const toPayment = (row) => {
     amountMinor: row.amount_minor,
     paidOn: row.paid_on,
     method: row.method,
+    source: row.source,
     reference: row.reference,
     recordedByName: row.recorded_by_name,
     createdAt: row.created_at,

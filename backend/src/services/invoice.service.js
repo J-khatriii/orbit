@@ -101,7 +101,7 @@ const present = (row, items) => {
     emailCount: row.email_count,
     paidAt: row.paid_at,
     amountPaidMinor: row.amount_paid_minor,
-    balanceMinor: row.total_minor - row.amount_paid_minor,
+    balanceMinor: Math.max(0, row.total_minor - row.amount_paid_minor),
   };
 };
 
@@ -485,6 +485,13 @@ export const deletePayment = async ({ workspaceId, invoiceId, paymentId }) => {
     if (!payment) {
       throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment not found");
     }
+    if (payment.source === "stripe") {
+      throw new AppError(
+        409,
+        "ONLINE_PAYMENT_LOCKED",
+        "An online payment can't be removed here. Refund it in Stripe instead.",
+      );
+    }
 
     await invoicesRepository.removePayment(trx, { workspaceId, id: payment.id });
 
@@ -500,4 +507,55 @@ export const deletePayment = async ({ workspaceId, invoiceId, paymentId }) => {
   });
 
   return getInvoice({ workspaceId, invoiceId: id });
+};
+
+// Money that arrived through Stripe. Unlike a payment typed in by hand, this can't be refused:
+// the money has already moved. It is recorded once per Stripe payment, and the invoice
+// becomes paid when what was received covers the total.
+export const recordOnlinePayment = async ({
+  workspaceId,
+  invoiceId,
+  amountMinor,
+  externalId,
+  paidOn,
+}) => {
+  await db.transaction(async (trx) => {
+    const locked = await lockInvoice(trx, workspaceId, invoiceId);
+    const inserted = await invoicesRepository.insertPaymentOnce(trx, {
+      workspace_id: workspaceId,
+      invoice_id: locked.id,
+      amount_minor: amountMinor,
+      paid_on: paidOn,
+      method: "online",
+      source: "stripe",
+      external_id: externalId,
+      reference: externalId,
+      recorded_by: null,
+    });
+
+    if (!inserted) {
+      return;
+    }
+    if (locked.status !== "sent") {
+      logger.warn(
+        { workspaceId, invoiceId, status: locked.status, externalId },
+        "online payment received for an invoice that is not open",
+      );
+
+      return;
+    }
+
+    const current = await loadInvoice(trx, workspaceId, locked.id);
+
+    if (current.amount_paid_minor > current.total_minor) {
+      logger.warn({ workspaceId, invoiceId, externalId }, "online payment is more than was owed");
+    }
+    if (current.amount_paid_minor >= current.total_minor) {
+      await invoicesRepository.update(trx, {
+        workspaceId,
+        id: locked.id,
+        values: { status: "paid", paid_at: trx.fn.now() },
+      });
+    }
+  });
 };

@@ -127,3 +127,21 @@ export const createCheckoutSession = async ({
     return session.url;
   });
 };
+
+// Checks that a webhook really came from Stripe. `rawBody` must be the exact bytes Stripe
+// sent, so the route that calls this must not run the JSON parser first.
+export const verifyWebhook = (rawBody, signature) => {
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    throw new AppError(
+      503,
+      "PAYMENTS_NOT_CONFIGURED",
+      "Online payments aren't set up on this server yet",
+    );
+  }
+
+  try {
+    return stripe().webhooks.constructEvent(rawBody, signature, env.STRIPE_WEBHOOK_SECRET);
+  } catch {
+    throw new AppError(400, "INVALID_SIGNATURE", "Invalid signature");
+  }
+};

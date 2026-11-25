@@ -102,3 +102,13 @@ export const downloadInvoicePdf = async (req, res) => {
 
   sendPdf(req, res, result);
 };
+
+export const startCheckout = async (req, res) => {
+  const result = await portalService.startCheckout({
+    workspaceId: req.workspace.id,
+    userId: req.user.id,
+    invoiceId: req.params.invoiceId,
+  });
+
+  res.json(result);
+};

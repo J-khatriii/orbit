@@ -18,6 +18,7 @@ import {
 } from "./serializers.js";
 import * as invoicesRepository from "../repositories/invoices.repository.js";
 import * as invoiceService from "./invoice.service.js";
+import * as onlinePaymentService from "./onlinePayment.service.js";
 
 export const listProjects = async ({ workspaceId, userId }) => {
   const clientIds = await listAccessibleClientIds(workspaceId, userId);
@@ -275,12 +276,19 @@ const loadVisibleInvoice = async (workspaceId, userId, invoiceId) => {
 export const getInvoice = async ({ workspaceId, userId, invoiceId }) => {
   const row = await loadVisibleInvoice(workspaceId, userId, invoiceId);
   const items = await invoicesRepository.listItems(db, { workspaceId, invoiceId: row.id });
+  const canPayOnline = await onlinePaymentService.canPayOnline({ workspaceId, invoice: row });
 
-  return { invoice: toPortalInvoice(row, items) };
+  return { invoice: { ...toPortalInvoice(row, items), canPayOnline } };
 };
 
 export const getInvoicePdf = async ({ workspaceId, userId, invoiceId }) => {
   const row = await loadVisibleInvoice(workspaceId, userId, invoiceId);
 
   return invoiceService.getInvoicePdf({ workspaceId, invoiceId: row.id });
+};
+
+export const startCheckout = async ({ workspaceId, userId, invoiceId }) => {
+  const row = await loadVisibleInvoice(workspaceId, userId, invoiceId);
+
+  return onlinePaymentService.createCheckout({ workspaceId, invoice: row });
 };

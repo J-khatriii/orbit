@@ -123,7 +123,9 @@ describe("portal invoices", () => {
     const detail = await person.agent.get(`${portal(workspaceId)}/${sent}`);
 
     expect(Object.keys(list.body.invoices[0]).sort()).toEqual(listKeys);
-    expect(Object.keys(detail.body.invoice).sort()).toEqual([...listKeys, "items"].sort());
+    expect(Object.keys(detail.body.invoice).sort()).toEqual(
+      [...listKeys, "canPayOnline", "items"].sort(),
+    );
     expect(Object.keys(detail.body.invoice.items[0]).sort()).toEqual([
       "description",
       "lineTotalMinor",

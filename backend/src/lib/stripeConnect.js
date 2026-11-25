@@ -84,3 +84,46 @@ export const createOnboardingLink = async ({ accountId, returnUrl, refreshUrl })
     return link.url;
   });
 };
+
+// A hosted Checkout page for one invoice, charged directly on the agency's own account.
+// It expires after an hour. Returns the page's URL.
+export const createCheckoutSession = async ({
+  accountId,
+  workspaceId,
+  invoiceId,
+  label,
+  workspaceName,
+  currency,
+  amount,
+  successUrl,
+  cancelUrl,
+}) => {
+  const metadata = { orbit_workspace_id: workspaceId, orbit_invoice_id: invoiceId };
+
+  return callStripe(async () => {
+    const session = await stripe().checkout.sessions.create(
+      {
+        mode: "payment",
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: currency.toLowerCase(),
+              unit_amount: amount,
+              product_data: { name: `Invoice ${label} from ${workspaceName}` },
+            },
+          },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        client_reference_id: invoiceId,
+        metadata,
+        payment_intent_data: { metadata, description: `Invoice ${label}` },
+        expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
+      },
+      { stripeAccount: accountId },
+    );
+
+    return session.url;
+  });
+};

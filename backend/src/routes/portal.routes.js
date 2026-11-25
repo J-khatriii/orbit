@@ -34,6 +34,7 @@ router.get("/files/:fileId/download", portalController.downloadFile);
 router.get("/invoices", validate(portalListInvoicesSchema, "query"), portalController.listInvoices);
 router.get("/invoices/:invoiceId", portalController.getInvoice);
 router.get("/invoices/:invoiceId/pdf", portalController.downloadInvoicePdf);
+router.post("/invoices/:invoiceId/checkout", portalController.startCheckout);
 
 router.post("/tasks/:taskId/review", validate(reviewTaskSchema), reviewsController.reviewTask);
 

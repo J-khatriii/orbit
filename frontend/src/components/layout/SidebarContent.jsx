@@ -4,6 +4,7 @@ import {
   CircleHelp,
   Columns3,
   ClipboardList,
+  CreditCard,
   Folder,
   FolderOpen,
   LayoutGrid,
@@ -44,6 +45,12 @@ const NAV = [
   { label: "Approvals", icon: CircleCheck, phase: 6 },
   { label: "Invoices", to: "/invoices", icon: Receipt, hideFor: ["member", "client"] },
   { label: "Templates", to: "/templates", icon: ClipboardList, hideFor: ["client"] },
+  {
+    label: "Payments",
+    to: "/settings/payments",
+    icon: CreditCard,
+    hideFor: ["admin", "member", "client"],
+  },
   {
     label: "My projects",
     to: "/portal",

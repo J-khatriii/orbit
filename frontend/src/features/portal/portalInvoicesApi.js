@@ -20,4 +20,8 @@ export const portalInvoicesApi = {
   get: (workspaceId, invoiceId) => {
     return api.get(`${portalUrl(workspaceId)}/invoices/${invoiceId}`);
   },
+  // Resolves to { url }: Stripe's page for paying what is still owed.
+  checkout: (workspaceId, invoiceId) => {
+    return api.post(`${portalUrl(workspaceId)}/invoices/${invoiceId}/checkout`);
+  },
 };

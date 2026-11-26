@@ -46,8 +46,15 @@ export const METHOD_LABELS = {
   card: "Card",
   cheque: "Cheque",
   other: "Other",
+  online: "Online (Stripe)",
 };
 
-export const PAYMENT_METHODS = Object.entries(METHOD_LABELS).map(([value, label]) => {
-  return { value, label };
-});
+// What can be typed in by hand. "Online" is only ever recorded automatically from Stripe, so it
+// isn't offered in the Record payment form.
+export const PAYMENT_METHODS = Object.entries(METHOD_LABELS)
+  .filter(([value]) => {
+    return value !== "online";
+  })
+  .map(([value, label]) => {
+    return { value, label };
+  });

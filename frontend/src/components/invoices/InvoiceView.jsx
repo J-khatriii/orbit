@@ -254,16 +254,21 @@ const InvoiceView = ({ workspaceId, invoice }) => {
                     <p className="w-28 text-right text-sm font-medium text-ink tabular-nums">
                       {formatMoney(payment.amountMinor, invoice.currency)}
                     </p>
-                    <button
-                      type="button"
-                      aria-label={`Remove the payment of ${formatMoney(payment.amountMinor, invoice.currency)}`}
-                      onClick={() => {
-                        setRemoving(payment);
-                      }}
-                      className="rounded-control p-2 text-ink-muted transition-colors hover:bg-sunken hover:text-clay-600"
-                    >
-                      <Trash2 className="size-4" aria-hidden="true" />
-                    </button>
+                    {payment.source === "stripe" ? (
+                      <span className="size-8" aria-hidden="true" />
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={`Remove the payment of ${formatMoney(payment.amountMinor, invoice.currency)}`}
+                        onClick={() => {
+                          setRemoving(payment);
+                        }}
+                        className="rounded-control p-2 text-ink-muted transition-colors hover:bg-sunken hover:text-clay-600"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
+                    ``
                   </li>
                 );
               })}
@@ -271,7 +276,8 @@ const InvoiceView = ({ workspaceId, invoice }) => {
           )}
           {invoice.status === "sent" && hasPayments && (
             <p className="mt-3 text-xs text-ink-muted">
-              To void this invoice, remove its payments first.
+              To void this invoice, remove its payments first. Online payments can only be refunded
+              in your Stripe dashboard.
             </p>
           )}
         </Card>

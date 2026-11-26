@@ -21,6 +21,8 @@ import messagesRoutes from "./messages.routes.js";
 import portalRoutes from "./portal.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import filesRoutes from "./files.routes.js";
+import invoicesRoutes from "./invoices.routes.js";
+import paymentsRoutes from "./payments.routes.js";
 
 const router = Router();
 
@@ -111,6 +113,17 @@ router.use(
   requireRole("owner", "admin", "member"),
   filesRoutes,
 );
+
+// Invoices. Owners and admins only.
+router.use(
+  "/:workspaceId/invoices",
+  workspaceContext,
+  requireRole("owner", "admin"),
+  invoicesRoutes,
+);
+
+// Where online payments go. Owners only.
+router.use("/:workspaceId/payments", workspaceContext, requireRole("owner"), paymentsRoutes);
 
 // The client list is internal: clients (the role) never see it.
 router.use(

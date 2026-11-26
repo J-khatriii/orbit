@@ -16,6 +16,16 @@ const schema = z.object({
   EMAIL_FROM: z.string().default("Orbit <no-reply@orbit.local>"),
   STORAGE_DIR: z.string().default("./storage"),
   MAX_UPLOAD_MB: z.coerce.number().int().positive().max(100).default(25),
+  STRIPE_SECRET_KEY: z
+    .string()
+    .regex(/^(sk|rk)_(test|live)_/, "must start with sk_test_ or sk_live_")
+    .or(z.literal(""))
+    .optional(),
+  STRIPE_WEBHOOK_SECRET: z
+    .string()
+    .regex(/^whsec_/, "must start with whsec_")
+    .or(z.literal(""))
+    .optional(),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -110,3 +110,62 @@ export const findFile = async (executor, { fileId, ...filters }) => {
     .where("files.id", fileId)
     .first([...FILE_COLUMNS, "files.storage_key"]);
 };
+
+// A client sees an invoice only if it has been sent (never a draft), it belongs to a client
+// they can access, and that client isn't archived.
+const visibleInvoices = (executor, { workspaceId, clientIds }) => {
+  return executor("invoices")
+    .join("clients", "clients.id", "invoices.client_id")
+    .leftJoin("projects", "projects.id", "invoices.project_id")
+    .where("invoices.workspace_id", workspaceId)
+    .whereIn("invoices.client_id", clientIds)
+    .whereNot("invoices.status", "draft")
+    .whereNull("clients.archived_at");
+};
+
+const invoiceColumns = (executor) => {
+  return [
+    "invoices.id",
+    "invoices.client_id",
+    "invoices.number",
+    "invoices.status",
+    "invoices.currency",
+    "invoices.issue_date",
+    "invoices.due_date",
+    "invoices.tax_rate_bps",
+    "invoices.subtotal_minor",
+    "invoices.tax_minor",
+    "invoices.total_minor",
+    "invoices.notes",
+    "invoices.sent_at",
+    "clients.company_name as client_name",
+    "projects.name as project_name",
+    executor.raw("(invoices.status = 'sent' AND invoices.due_date < CURRENT_DATE) AS overdue"),
+    executor.raw(
+      "COALESCE((SELECT SUM(p.amount_minor) FROM invoice_payments p WHERE p.invoice_id = invoices.id), 0)::bigint AS amount_paid_minor",
+    ),
+  ];
+};
+
+export const listInvoices = async (executor, { limit, offset, ...filters }) => {
+  return visibleInvoices(executor, filters)
+    .orderBy([
+      { column: "invoices.sent_at", order: "desc" },
+      { column: "invoices.id", order: "desc" },
+    ])
+    .limit(limit)
+    .offset(offset)
+    .select(invoiceColumns(executor));
+};
+
+export const countInvoices = async (executor, filters) => {
+  const row = await visibleInvoices(executor, filters).count("* as total").first();
+
+  return Number(row.total);
+};
+
+export const findInvoice = async (executor, { invoiceId, ...filters }) => {
+  return visibleInvoices(executor, filters)
+    .where("invoices.id", invoiceId)
+    .first(invoiceColumns(executor));
+};

@@ -6,6 +6,7 @@ import { reviewTaskSchema } from "../schemas/reviews.schemas.js";
 import * as portalController from "../controllers/portal.controller.js";
 import * as reviewsController from "../controllers/reviews.controller.js";
 import { discardUpload, uploadFiles } from "../middleware/upload.js";
+import { portalListInvoicesSchema } from "../schemas/invoices.schemas.js";
 
 // Mounted under /workspaces/:workspaceId/portal. The mount has already checked the
 // workspace and that the person's role is "client".
@@ -29,6 +30,11 @@ router.post(
 
 router.get("/files", validate(portalListFilesSchema, "query"), portalController.listFiles);
 router.get("/files/:fileId/download", portalController.downloadFile);
+
+router.get("/invoices", validate(portalListInvoicesSchema, "query"), portalController.listInvoices);
+router.get("/invoices/:invoiceId", portalController.getInvoice);
+router.get("/invoices/:invoiceId/pdf", portalController.downloadInvoicePdf);
+router.post("/invoices/:invoiceId/checkout", portalController.startCheckout);
 
 router.post("/tasks/:taskId/review", validate(reviewTaskSchema), reviewsController.reviewTask);
 
